@@ -58,8 +58,11 @@ def load_state() -> dict:
 
 
 def save_state(state: dict) -> None:
+    """Atomik yazim: SIGKILL state dosyasini bozmasin."""
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    tmp = STATE_FILE.with_name(STATE_FILE.name + ".tmp")
+    tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    tmp.replace(STATE_FILE)  # atomik (POSIX ve modern Windows)
 
 
 def fetch_page(session: requests.Session, typ: str, page: int) -> dict:
@@ -211,11 +214,17 @@ def _sync_full(session: requests.Session, typ: str, state: dict) -> int:
     tstate = state.setdefault(typ, {"max_id": 0, "last_full_sync": None, "last_delta_sync": None})
     resume_page = int(tstate.get("resume_page") or 0)
     max_known = int(tstate.get("max_id") or 0)
+    partial_exists = partial_path(typ).exists()
 
-    # Resume_page yoksa fresh start: partial varsa sil
-    if resume_page <= 0 and partial_path(typ).exists():
-        log.info(f"[{typ}] eski partial bulundu, fresh start oncesi siliniyor")
-        partial_path(typ).unlink()
+    # Partial dosyayi ASLA silme. Duplicate ekleme zararsiz (dedupe en sonda).
+    # State kaybolsa bile partial korunsun.
+    if partial_exists and resume_page <= 0:
+        log.warning(f"[{typ}] partial mevcut ama resume_page yok - basa donup partial'a ekleyecegim")
+    elif partial_exists and resume_page > 0:
+        log.info(f"[{typ}] partial bulundu, page={resume_page}'den devam")
+    elif not partial_exists and resume_page > 0:
+        log.warning(f"[{typ}] resume_page={resume_page} ama partial yok - basa doniyorum")
+        resume_page = 0
 
     first = fetch_page(session, typ, 1)
     total = first.get("totalCount")
@@ -388,6 +397,15 @@ def write_badge(state: dict) -> None:
 
 def sync(mode: str) -> None:
     state = load_state()
+    # Diagnostic: baslangic state'i
+    log.info(f"== {mode.upper()} sync basliyor ==")
+    for t in TYPES:
+        ts = state.get(t, {})
+        log.info(
+            f"  [{t}] max_id={ts.get('max_id', 0)} resume_page={ts.get('resume_page')} "
+            f"partial_exists={partial_path(t).exists()} "
+            f"final_exists={final_path(t).exists()}"
+        )
     session = requests.Session()
     try:
         for typ in TYPES:
