@@ -7,7 +7,7 @@ CronJob (sync) + Deployment (nginx serve) + PVC (state ve feed'ler) ile native K
 - Kubernetes 1.24+
 - Default StorageClass (RWO yeterli; `local-path`, `gp2`, `csi-...` vb.)
 - Cluster'ın ghcr.io'ya erişimi veya kendi private registry'ne mirror
-- Cluster içinden SGB API'sine (`https://www.siberguvenlik.gov.tr`) çıkış
+- Cluster içinden SGB API'sine (`https://siberguvenlik.gov.tr`) çıkış
 
 ## Manifestler
 

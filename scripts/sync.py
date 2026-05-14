@@ -9,7 +9,7 @@ Modlar:
     --mode healthcheck  : stats.json fresh mi diye bakar (delta workflow'da kullaniliyor).
 
 API:
-    GET https://www.siberguvenlik.gov.tr/api/address/index?type={domain|url|ip|ip6|ip6net}&page=N
+    GET https://siberguvenlik.gov.tr/api/address/index?type={domain|url|ip|ip6|ip6net}&page=N
     Response: {"totalCount": N, "count": 20, "models": [...], "page": P, "pageCount": M}
     Kayitlar tarihe gore newest-first siralanmis durumda.
     ID'ler tum tipler arasinda global ve monoton artan.
@@ -28,7 +28,7 @@ import requests
 
 __version__ = "2.0.0"
 
-API_URL = "https://www.siberguvenlik.gov.tr/api/address/index"
+API_URL = "https://siberguvenlik.gov.tr/api/address/index"
 TYPES = ("domain", "url", "ip", "ip6", "ip6net")
 SLEEP_OK_FULL = 1.0
 SLEEP_OK_DELTA = 1.0

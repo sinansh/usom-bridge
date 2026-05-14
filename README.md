@@ -6,7 +6,7 @@
 
 SGB (Siber Güvenlik Başkanlığı, eski **USOM** — Ulusal Siber Olaylara Müdahale Merkezi) tehdit beslemesini güvenlik duvarlarının (FortiGate, Sophos, Palo Alto, pfSense, Pi-hole, Squid) doğrudan tüketebileceği **düz metin** formatına dönüştüren açık kaynak proje.
 
-> **Not:** USOM, 2026'da Siber Güvenlik Başkanlığı (SGB) bünyesinde yeniden yapılandırıldı. API uç noktası `www.usom.gov.tr` → `www.siberguvenlik.gov.tr` olarak değişti. Bu proje yeni endpoint'i kullanır.
+> **Not:** USOM, 2026'da Siber Güvenlik Başkanlığı (SGB) bünyesinde yeniden yapılandırıldı. API uç noktası `www.usom.gov.tr` → `siberguvenlik.gov.tr` olarak değişti. Bu proje yeni endpoint'i kullanır.
 
 Dört farklı dağıtım modelini destekler:
 
@@ -105,7 +105,7 @@ Environment variables:
 
 ## Veri kaynağı
 
-SGB Open Threat Feed API: <https://www.siberguvenlik.gov.tr/api/address/index>
+SGB Open Threat Feed API: <https://siberguvenlik.gov.tr/api/address/index>
 
 Kayıt kategorileri (`desc` alanı):
 

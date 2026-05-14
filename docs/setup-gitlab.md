@@ -6,7 +6,7 @@ Bu rehber, projeyi kurumun kendi GitLab sunucusuna klonlayıp tamamen offline (i
 
 - Self-hosted GitLab CE/EE (12.0+)
 - En az bir GitLab Runner (shell veya docker executor). Full sync 6-10 saat sürebileceği için runner'ın `timeout` ayarı yeterli olmalı (`/etc/gitlab-runner/config.toml` içinde `timeout = 36000` gibi).
-- Runner'ın SGB API'sine (`https://www.siberguvenlik.gov.tr`) çıkışı olmalı. Kurumsal proxy varsa `HTTPS_PROXY` env değişkeni runner config'ine eklenmeli.
+- Runner'ın SGB API'sine (`https://siberguvenlik.gov.tr`) çıkışı olmalı. Kurumsal proxy varsa `HTTPS_PROXY` env değişkeni runner config'ine eklenmeli.
 
 ## 1. Repo'yu klonla
 
@@ -113,6 +113,6 @@ end
 
 - **`HATA: GIT_PUSH_TOKEN tanimli degil`**: 3. adımı atladın.
 - **`remote: HTTP Basic: Access denied`**: Token'ın scope'unda `write_repository` yok ya da süresi dolmuş. Yeniden oluştur.
-- **Pipeline başladı ama hiçbir şey değişmiyor**: SGB API'ye erişim yok. Runner'ın `curl https://www.siberguvenlik.gov.tr/api/address/index?type=ip` ile çıkıp çıkamadığını kontrol et.
+- **Pipeline başladı ama hiçbir şey değişmiyor**: SGB API'ye erişim yok. Runner'ın `curl https://siberguvenlik.gov.tr/api/address/index?type=ip` ile çıkıp çıkamadığını kontrol et.
 - **Runner timeout'a takılıyor ama otomatik tetiklenmiyor**: `GIT_PUSH_TOKEN`'a `api` scope'u verilmemiş. Token'ı güncelle.
 - **stats.json'da `last_update_utc` 48 saatten eski**: healthcheck adımı fail edecek. Pipeline tarihine bak, hangi job'ta takılındı incele.

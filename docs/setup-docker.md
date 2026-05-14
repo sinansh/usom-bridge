@@ -5,7 +5,7 @@ Tek konteyner ile SGB API Bridge'i ayağa kaldır. İçinde nginx + sync loop bi
 ## Önkoşullar
 
 - Docker 20.10+ (compose v2 ile)
-- Host'tan SGB API'sine (`https://www.siberguvenlik.gov.tr`) erişim. Proxy varsa Docker daemon ayarlarında `HTTPS_PROXY` set edilmeli.
+- Host'tan SGB API'sine (`https://siberguvenlik.gov.tr`) erişim. Proxy varsa Docker daemon ayarlarında `HTTPS_PROXY` set edilmeli.
 - ~1 GB disk (state + feed dosyaları için).
 
 ## Hızlı başlangıç
