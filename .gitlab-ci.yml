@@ -1,4 +1,4 @@
-# USOM Bridge - GitLab CI/CD
+# SGB API Bridge - GitLab CI/CD
 #
 # Kurulum adimlari icin: docs/setup-gitlab.md
 #
@@ -23,7 +23,7 @@ variables:
 .push_setup: &push_setup
   before_script:
     - apt-get update -qq && apt-get install -y -qq git curl
-    - git config user.name "usom-bridge-bot"
+    - git config user.name "sgb-api-bridge-bot"
     - git config user.email "noreply@${CI_SERVER_HOST}"
     - |
       if [ -z "$GIT_PUSH_TOKEN" ]; then
@@ -59,7 +59,7 @@ sync:delta:
     key: pip
     paths: [.cache/pip]
   timeout: 30m
-  resource_group: usom-sync
+  resource_group: sgb-sync
 
 # ---- Full sync: haftalik + manuel ----
 sync:full:
@@ -98,7 +98,7 @@ sync:full:
     key: pip
     paths: [.cache/pip]
   timeout: 6h
-  resource_group: usom-sync
+  resource_group: sgb-sync
 
 # ---- Opsiyonel: GitLab Pages ----
 # Pages'i kullanmak istersen yorumdan cikar. URL formati:

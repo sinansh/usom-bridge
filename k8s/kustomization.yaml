@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: usom-bridge
+namespace: sgb-api-bridge
 
 resources:
   - namespace.yaml
@@ -14,7 +14,7 @@ resources:
 
 # Image tag'i merkezi ayarla
 images:
-  - name: ghcr.io/sinansh/usom-bridge
+  - name: ghcr.io/bilsectr/sgb-api-bridge
     newTag: latest
 
 # Kurulum:

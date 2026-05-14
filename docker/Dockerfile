@@ -1,21 +1,26 @@
 # syntax=docker/dockerfile:1.6
-# usom-bridge: tek imaj, mode dispatcher ile hem all-in-one (Docker) hem split (K8s) destekler.
+# sgb-api-bridge: tek imaj, mode dispatcher ile hem all-in-one (Docker) hem split (K8s) destekler.
 #
-# Default davranis (docker run usom-bridge):
+# Default davranis (docker run sgb-api-bridge):
 #   - nginx /data/docs'u 80 portundan serve eder
 #   - python sync.py --mode loop arka planda delta'yi saatte bir, full'u haftada bir tetikler
 #
 # Alternatif modlar (K8s CronJob ve manuel kullanim icin):
-#   docker run --rm usom-bridge sync-once delta
-#   docker run --rm usom-bridge sync-once full
-#   docker run --rm usom-bridge healthcheck
-#   docker run -d usom-bridge serve         # sadece HTTP, sync yok
-#   docker run -d usom-bridge loop          # sadece sync, HTTP yok
+#   docker run --rm sgb-api-bridge sync-once delta
+#   docker run --rm sgb-api-bridge sync-once full
+#   docker run --rm sgb-api-bridge healthcheck
+#   docker run -d sgb-api-bridge serve         # sadece HTTP, sync yok
+#   docker run -d sgb-api-bridge loop          # sadece sync, HTTP yok
 
 FROM python:3.11-slim AS build
 RUN pip install --no-cache-dir --prefix=/install requests
 
 FROM python:3.11-slim
+
+LABEL org.opencontainers.image.title="SGB API Bridge" \
+      org.opencontainers.image.description="SGB (eski USOM) tehdit beslemesini firewall'larin tuketebilecegi duz metin formatina cevirir" \
+      org.opencontainers.image.source="https://github.com/bilsectr/sgb-api-bridge" \
+      org.opencontainers.image.licenses="MIT"
 
 # nginx ve curl (healthcheck icin)
 RUN apt-get update \
@@ -28,7 +33,7 @@ COPY --from=build /install /usr/local
 
 # Uygulama
 COPY scripts/sync.py /app/sync.py
-COPY docker/nginx.conf /etc/nginx/conf.d/usom-bridge.conf
+COPY docker/nginx.conf /etc/nginx/conf.d/sgb-api-bridge.conf
 COPY docker/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh \
@@ -48,9 +53,9 @@ WORKDIR /data
 EXPOSE 80
 VOLUME ["/data"]
 
-ENV USOM_BRIDGE_ROOT=/data \
-    USOM_BRIDGE_DELTA_INTERVAL_SEC=3600 \
-    USOM_BRIDGE_FULL_INTERVAL_DAYS=7 \
+ENV SGB_BRIDGE_ROOT=/data \
+    SGB_BRIDGE_DELTA_INTERVAL_SEC=3600 \
+    SGB_BRIDGE_FULL_INTERVAL_DAYS=7 \
     PYTHONUNBUFFERED=1
 
 HEALTHCHECK --interval=60s --timeout=5s --start-period=30s \

@@ -1,8 +1,8 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: usom-sync-full
-  namespace: usom-bridge
+  name: sgb-sync-full
+  namespace: sgb-api-bridge
 spec:
   schedule: "0 3 * * 0"            # Pazar 03:00 UTC
   concurrencyPolicy: Forbid
@@ -10,18 +10,18 @@ spec:
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
-      activeDeadlineSeconds: 36000  # 10 saat (USOM rate-limit'i icin tampon)
+      activeDeadlineSeconds: 36000  # 10 saat (SGB rate-limit'i icin tampon)
       backoffLimit: 2
       template:
         spec:
           restartPolicy: OnFailure
           containers:
             - name: sync
-              image: ghcr.io/sinansh/usom-bridge:latest
+              image: ghcr.io/bilsectr/sgb-api-bridge:latest
               imagePullPolicy: IfNotPresent
               args: ["sync-once", "full"]
               env:
-                - name: USOM_BRIDGE_ROOT
+                - name: SGB_BRIDGE_ROOT
                   value: /data
               volumeMounts:
                 - name: data
@@ -36,4 +36,4 @@ spec:
           volumes:
             - name: data
               persistentVolumeClaim:
-                claimName: usom-data
+                claimName: sgb-data

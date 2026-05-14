@@ -1,12 +1,14 @@
-# USOM Bridge
+# SGB API Bridge
 
-[![Last sync](https://img.shields.io/endpoint?url=https://sinansh.github.io/usom-bridge/badge.json)](https://sinansh.github.io/usom-bridge/stats.json)
-[![Delta sync](https://github.com/sinansh/usom-bridge/actions/workflows/sync-delta.yml/badge.svg)](https://github.com/sinansh/usom-bridge/actions/workflows/sync-delta.yml)
+[![Last sync](https://img.shields.io/endpoint?url=https://bilsectr.github.io/sgb-api-bridge/badge.json)](https://bilsectr.github.io/sgb-api-bridge/stats.json)
+[![Delta sync](https://github.com/bilsectr/sgb-api-bridge/actions/workflows/sync-delta.yml/badge.svg)](https://github.com/bilsectr/sgb-api-bridge/actions/workflows/sync-delta.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-USOM (Ulusal Siber Olaylara Müdahale Merkezi) tehdit beslemesini güvenlik duvarlarının (FortiGate, Sophos, Palo Alto, pfSense, Pi-hole, Squid) doğrudan tüketebileceği **düz metin** formatına dönüştüren açık kaynak proje.
+SGB (Siber Güvenlik Başkanlığı, eski **USOM** — Ulusal Siber Olaylara Müdahale Merkezi) tehdit beslemesini güvenlik duvarlarının (FortiGate, Sophos, Palo Alto, pfSense, Pi-hole, Squid) doğrudan tüketebileceği **düz metin** formatına dönüştüren açık kaynak proje.
 
-Üç farklı dağıtım modelini destekler:
+> **Not:** USOM, 2026'da Siber Güvenlik Başkanlığı (SGB) bünyesinde yeniden yapılandırıldı. API uç noktası `www.usom.gov.tr` → `www.siberguvenlik.gov.tr` olarak değişti. Bu proje yeni endpoint'i kullanır.
+
+Dört farklı dağıtım modelini destekler:
 
 | Model | Senaryo | Kurulum dokümanı |
 |---|---|---|
@@ -23,22 +25,22 @@ Aşağıdaki URL'leri firewall'una doğrudan ver:
 
 | Tür | Adet | URL |
 |---|---:|---|
-| Domain | ~450K | `https://sinansh.github.io/usom-bridge/domain-list.txt` |
-| IPv4 | ~14K | `https://sinansh.github.io/usom-bridge/ip-list.txt` |
-| URL | ~7K | `https://sinansh.github.io/usom-bridge/url-list.txt` |
-| IPv6 | — | `https://sinansh.github.io/usom-bridge/ip6-list.txt` |
-| IPv6 subnet | — | `https://sinansh.github.io/usom-bridge/ip6net-list.txt` |
-| Stats | — | `https://sinansh.github.io/usom-bridge/stats.json` |
+| Domain | ~450K | `https://bilsectr.github.io/sgb-api-bridge/domain-list.txt` |
+| IPv4 | ~14K | `https://bilsectr.github.io/sgb-api-bridge/ip-list.txt` |
+| URL | ~7K | `https://bilsectr.github.io/sgb-api-bridge/url-list.txt` |
+| IPv6 | — | `https://bilsectr.github.io/sgb-api-bridge/ip6-list.txt` |
+| IPv6 subnet | — | `https://bilsectr.github.io/sgb-api-bridge/ip6net-list.txt` |
+| Stats | — | `https://bilsectr.github.io/sgb-api-bridge/stats.json` |
 
 ## Hızlı başlangıç (Docker)
 
 ```bash
 docker run -d \
-  --name usom-bridge \
+  --name sgb-api-bridge \
   -p 8080:80 \
-  -v usom-bridge-data:/data \
+  -v sgb-api-bridge-data:/data \
   --restart unless-stopped \
-  ghcr.io/sinansh/usom-bridge:latest
+  ghcr.io/bilsectr/sgb-api-bridge:latest
 ```
 
 Detay: [docs/setup-docker.md](docs/setup-docker.md)
@@ -46,8 +48,8 @@ Detay: [docs/setup-docker.md](docs/setup-docker.md)
 ## Hızlı başlangıç (Kubernetes)
 
 ```bash
-git clone https://github.com/sinansh/usom-bridge.git
-kubectl apply -k usom-bridge/k8s/
+git clone https://github.com/bilsectr/sgb-api-bridge.git
+kubectl apply -k sgb-api-bridge/k8s/
 ```
 
 Detay: [docs/setup-k8s.md](docs/setup-k8s.md)
@@ -56,10 +58,10 @@ Detay: [docs/setup-k8s.md](docs/setup-k8s.md)
 
 ## Nasıl çalışır?
 
-- **Delta sync** — saatte bir, USOM API'sinden her tür için (`domain`, `url`, `ip`, `ip6`, `ip6net`) yalnız yeni kayıtları çeker (~1-3 dk).
+- **Delta sync** — saatte bir, SGB API'sinden her tür için (`domain`, `url`, `ip`, `ip6`, `ip6net`) yalnız yeni kayıtları çeker (~1-3 dk).
 - **Full sync** — pazar 03:00 UTC (veya 7 günde bir, Docker loop modunda), tüm kayıtları yeniden çeker (drift düzeltici, ~5-10 saat). Resume desteklidir; runner timeout'a takılırsa kaldığı yerden devam eder.
 
-USOM API kayıtları tarih sırasına göre newest-first dönüyor ve ID'ler global monoton artıyor. Delta job'ı her tür için `state/seen_ids.json`'daki `max_id`'den büyük kayıtlara ulaşana kadar sayfaları dolaşıp, bilinen kayda denk gelince durur.
+SGB API kayıtları tarih sırasına göre newest-first dönüyor ve ID'ler global monoton artıyor. Delta job'ı her tür için `state/seen_ids.json`'daki `max_id`'den büyük kayıtlara ulaşana kadar sayfaları dolaşıp, bilinen kayda denk gelince durur.
 
 ## Cihaz konfigürasyon örnekleri
 
@@ -67,14 +69,14 @@ USOM API kayıtları tarih sırasına göre newest-first dönüyor ve ID'ler glo
 
 ```
 config system external-resource
-    edit "USOM-Domain"
+    edit "SGB-Domain"
         set type domain
-        set resource "https://sinansh.github.io/usom-bridge/domain-list.txt"
+        set resource "https://bilsectr.github.io/sgb-api-bridge/domain-list.txt"
         set refresh-rate 60
     next
-    edit "USOM-IP"
+    edit "SGB-IP"
         set type address
-        set resource "https://sinansh.github.io/usom-bridge/ip-list.txt"
+        set resource "https://bilsectr.github.io/sgb-api-bridge/ip-list.txt"
         set refresh-rate 60
     next
 end
@@ -85,8 +87,8 @@ Kendi base URL'ini kullanmak için (GitLab/Docker/K8s) yukarıdaki host kısmın
 ## Kendin koşturmak istersen (CLI)
 
 ```bash
-git clone https://github.com/sinansh/usom-bridge
-cd usom-bridge
+git clone https://github.com/bilsectr/sgb-api-bridge
+cd sgb-api-bridge
 pip install requests
 python scripts/sync.py --mode full     # ~5-10 saat
 python scripts/sync.py --mode delta    # ~1-3 dk
@@ -97,13 +99,13 @@ Environment variables:
 
 | Variable | Default | Açıklama |
 |---|---|---|
-| `USOM_BRIDGE_ROOT` | repo kökü | State ve docs/'un kök dizini |
-| `USOM_BRIDGE_DELTA_INTERVAL_SEC` | `3600` | Loop modunda delta sıklığı |
-| `USOM_BRIDGE_FULL_INTERVAL_DAYS` | `7` | Loop modunda full sıklığı |
+| `SGB_BRIDGE_ROOT` | repo kökü | State ve docs/'un kök dizini |
+| `SGB_BRIDGE_DELTA_INTERVAL_SEC` | `3600` | Loop modunda delta sıklığı |
+| `SGB_BRIDGE_FULL_INTERVAL_DAYS` | `7` | Loop modunda full sıklığı |
 
 ## Veri kaynağı
 
-USOM Open Threat Feed API: <https://www.usom.gov.tr/api/address/index>
+SGB Open Threat Feed API: <https://www.siberguvenlik.gov.tr/api/address/index>
 
 Kayıt kategorileri (`desc` alanı):
 
@@ -117,7 +119,7 @@ Kayıt kategorileri (`desc` alanı):
 
 ## Sorumluluk reddi
 
-Bu proje **USOM ile resmi bir bağlantısı olmayan**, kişisel, kâr amacı gütmeyen, açık kaynak bir araçtır. Üretim sistemlerinde "as-is" kullanılır; veri doğruluğundan USOM sorumludur.
+Bu proje **SGB / Siber Güvenlik Başkanlığı ile resmi bir bağlantısı olmayan**, kâr amacı gütmeyen, açık kaynak bir araçtır. Üretim sistemlerinde "as-is" kullanılır; veri doğruluğundan SGB sorumludur.
 
 ## Lisans
 

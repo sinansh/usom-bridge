@@ -1,8 +1,8 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: usom-sync-delta
-  namespace: usom-bridge
+  name: sgb-sync-delta
+  namespace: sgb-api-bridge
 spec:
   schedule: "23 * * * *"
   concurrencyPolicy: Forbid
@@ -17,11 +17,11 @@ spec:
           restartPolicy: Never
           containers:
             - name: sync
-              image: ghcr.io/sinansh/usom-bridge:latest
+              image: ghcr.io/bilsectr/sgb-api-bridge:latest
               imagePullPolicy: IfNotPresent
               args: ["sync-once", "delta"]
               env:
-                - name: USOM_BRIDGE_ROOT
+                - name: SGB_BRIDGE_ROOT
                   value: /data
               volumeMounts:
                 - name: data
@@ -36,4 +36,4 @@ spec:
           volumes:
             - name: data
               persistentVolumeClaim:
-                claimName: usom-data
+                claimName: sgb-data

@@ -7,7 +7,7 @@ CronJob (sync) + Deployment (nginx serve) + PVC (state ve feed'ler) ile native K
 - Kubernetes 1.24+
 - Default StorageClass (RWO yeterli; `local-path`, `gp2`, `csi-...` vb.)
 - Cluster'ın ghcr.io'ya erişimi veya kendi private registry'ne mirror
-- Cluster içinden USOM API'sine (`https://www.usom.gov.tr`) çıkış
+- Cluster içinden SGB API'sine (`https://www.siberguvenlik.gov.tr`) çıkış
 
 ## Manifestler
 
@@ -28,8 +28,8 @@ k8s/
 ## Kurulum
 
 ```bash
-git clone https://github.com/sinansh/usom-bridge.git
-cd usom-bridge
+git clone https://github.com/bilsectr/sgb-api-bridge.git
+cd sgb-api-bridge
 kubectl apply -k k8s/
 ```
 
@@ -49,8 +49,8 @@ kubectl apply -f k8s/service.yaml
 CronJob'lar tetiklendiğinde çalışır. İlk full sync'in hemen başlamasını istersen elle Job oluştur:
 
 ```bash
-kubectl -n usom-bridge create job --from=cronjob/usom-sync-full bootstrap
-kubectl -n usom-bridge logs -f job/bootstrap
+kubectl -n sgb-api-bridge create job --from=cronjob/sgb-sync-full bootstrap
+kubectl -n sgb-api-bridge logs -f job/bootstrap
 ```
 
 Full sync 5-10 saat sürer. `activeDeadlineSeconds: 36000` (10h) ile sınırlı; takılırsa pod öldürülür, ama state ve partial dosyalar PVC'de kalır. Bir sonraki run resume eder.
@@ -59,12 +59,12 @@ Full sync 5-10 saat sürer. `activeDeadlineSeconds: 36000` (10h) ile sınırlı;
 
 ### Cluster içinden
 
-Cluster içindeki diğer pod'lardan: `http://usom-bridge.usom-bridge.svc.cluster.local/domain-list.txt`
+Cluster içindeki diğer pod'lardan: `http://sgb-api-bridge.sgb-api-bridge.svc.cluster.local/domain-list.txt`
 
 ### Cluster dışından — Port-forward (test)
 
 ```bash
-kubectl -n usom-bridge port-forward svc/usom-bridge 8080:80
+kubectl -n sgb-api-bridge port-forward svc/sgb-api-bridge 8080:80
 curl http://localhost:8080/domain-list.txt
 ```
 
@@ -96,7 +96,7 @@ Veya `kustomization.yaml` içinde Ingress satırını yorumdan çıkar.
 
 ```yaml
 images:
-  - name: ghcr.io/sinansh/usom-bridge
+  - name: ghcr.io/bilsectr/sgb-api-bridge
     newTag: v1.0.0
 ```
 
@@ -107,17 +107,17 @@ Production'da `latest` yerine sabit tag öneririz.
 İmajı kendi registry'nize taşıyın:
 
 ```bash
-docker pull ghcr.io/sinansh/usom-bridge:latest
-docker tag ghcr.io/sinansh/usom-bridge:latest registry.kurum.local/usom-bridge:1.0
-docker push registry.kurum.local/usom-bridge:1.0
+docker pull ghcr.io/bilsectr/sgb-api-bridge:latest
+docker tag ghcr.io/bilsectr/sgb-api-bridge:latest registry.kurum.local/sgb-api-bridge:1.0
+docker push registry.kurum.local/sgb-api-bridge:1.0
 ```
 
 Kustomization:
 
 ```yaml
 images:
-  - name: ghcr.io/sinansh/usom-bridge
-    newName: registry.kurum.local/usom-bridge
+  - name: ghcr.io/bilsectr/sgb-api-bridge
+    newName: registry.kurum.local/sgb-api-bridge
     newTag: "1.0"
 ```
 
@@ -138,27 +138,27 @@ Cluster proxy gerektiriyorsa CronJob'lardaki `env:` listesine ekle:
 
 ```bash
 # CronJob durumu
-kubectl -n usom-bridge get cronjobs
+kubectl -n sgb-api-bridge get cronjobs
 
 # Son Job'lar
-kubectl -n usom-bridge get jobs --sort-by=.status.startTime
+kubectl -n sgb-api-bridge get jobs --sort-by=.status.startTime
 
 # Bir job'un log'u
-kubectl -n usom-bridge logs job/usom-sync-delta-<hash>
+kubectl -n sgb-api-bridge logs job/sgb-sync-delta-<hash>
 
 # Serve pod'unun durumu
-kubectl -n usom-bridge get pods -l app.kubernetes.io/component=serve
+kubectl -n sgb-api-bridge get pods -l app.kubernetes.io/component=serve
 
 # stats.json
-kubectl -n usom-bridge exec deploy/usom-serve -- cat /data/docs/stats.json
+kubectl -n sgb-api-bridge exec deploy/sgb-serve -- cat /data/docs/stats.json
 ```
 
 ## Sorun giderme
 
 - **PVC `Pending`**: cluster'ın default StorageClass'ı yok ya da PV provisioner çalışmıyor. `kubectl get storageclass` ile kontrol et, `pvc.yaml`'a `storageClassName:` ekle.
-- **CronJob hiç çalışmıyor**: cluster saat dilimi UTC mi yoksa local mi? `kubectl describe cronjob/usom-sync-delta` ile `Last Schedule Time` bak. v1.27+ ise `spec.timeZone` set edilebilir.
-- **Pod `CrashLoopBackOff`**: `kubectl logs <pod>` ile incele. Tipik sebep: USOM API'ye erişim yok veya PVC'de yer kalmadı.
-- **404 dönüyor**: full sync henüz bitmemiş. `kubectl exec deploy/usom-serve -- ls -la /data/docs` ile dosyaları kontrol et.
+- **CronJob hiç çalışmıyor**: cluster saat dilimi UTC mi yoksa local mi? `kubectl describe cronjob/sgb-sync-delta` ile `Last Schedule Time` bak. v1.27+ ise `spec.timeZone` set edilebilir.
+- **Pod `CrashLoopBackOff`**: `kubectl logs <pod>` ile incele. Tipik sebep: SGB API'ye erişim yok veya PVC'de yer kalmadı.
+- **404 dönüyor**: full sync henüz bitmemiş. `kubectl exec deploy/sgb-serve -- ls -la /data/docs` ile dosyaları kontrol et.
 - **Deployment `0/1 ready` Recreate'te takıldı**: PVC RWO ise CronJob pod'u ile Deployment pod'u aynı node'da olmalı. Multi-node cluster'da node affinity ekle veya RWX PVC kullan.
 
 ## Helm chart?

@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: usom-bridge
-  namespace: usom-bridge
+  name: sgb-api-bridge
+  namespace: sgb-api-bridge
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: usom-bridge
+    app.kubernetes.io/name: sgb-api-bridge
     app.kubernetes.io/component: serve
   ports:
     - name: http

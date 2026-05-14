@@ -3,8 +3,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: usom-bridge
-  namespace: usom-bridge
+  name: sgb-api-bridge
+  namespace: sgb-api-bridge
   annotations:
     # nginx-ingress kullaniyorsan:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
@@ -13,16 +13,16 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: usom-bridge.kurum.local
+    - host: sgb-feed.kurum.local
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: usom-bridge
+                name: sgb-api-bridge
                 port:
                   number: 80
   # tls:
-  #   - hosts: ["usom-bridge.kurum.local"]
-  #     secretName: usom-bridge-tls
+  #   - hosts: ["sgb-feed.kurum.local"]
+  #     secretName: sgb-api-bridge-tls

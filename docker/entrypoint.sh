@@ -14,7 +14,7 @@ MODE="${1:-all-in-one}"
 shift 2>/dev/null || true
 
 # Veri dizinleri yoksa olustur
-mkdir -p "${USOM_BRIDGE_ROOT:-/data}/docs" "${USOM_BRIDGE_ROOT:-/data}/state"
+mkdir -p "${SGB_BRIDGE_ROOT:-/data}/docs" "${SGB_BRIDGE_ROOT:-/data}/state"
 
 case "$MODE" in
   all-in-one)

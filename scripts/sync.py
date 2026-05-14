@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-USOM Bridge - USOM API'sini duz metin feed'e donusturur.
+SGB API Bridge - SGB (eski USOM) API'sini duz metin feed'e donusturur.
 
 Modlar:
     --mode full         : Tum tipler icin tum sayfalari ceker (~4 saat). Haftalik refresh.
     --mode delta        : Tum tipler icin yalniz yeni kayitlari ceker (~1-3 dk). Saatlik.
+    --mode loop         : Container'lar icin: delta'yi saatlik, full'u haftalik tetikler.
     --mode healthcheck  : stats.json fresh mi diye bakar (delta workflow'da kullaniliyor).
 
 API:
-    GET https://www.usom.gov.tr/api/address/index?type={domain|url|ip}&page=N
+    GET https://www.siberguvenlik.gov.tr/api/address/index?type={domain|url|ip|ip6|ip6net}&page=N
     Response: {"totalCount": N, "count": 20, "models": [...], "page": P, "pageCount": M}
     Kayitlar tarihe gore newest-first siralanmis durumda.
     ID'ler tum tipler arasinda global ve monoton artan.
@@ -25,35 +26,35 @@ from pathlib import Path
 
 import requests
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
-API_URL = "https://www.usom.gov.tr/api/address/index"
+API_URL = "https://www.siberguvenlik.gov.tr/api/address/index"
 TYPES = ("domain", "url", "ip", "ip6", "ip6net")
 SLEEP_OK_FULL = 1.0
 SLEEP_OK_DELTA = 1.0
 SLEEP_429_BASE = 15.0
 MAX_RETRIES = 6
 TIMEOUT = 30
-UA = "usom-bridge/1.0 (+https://github.com/sinansh/usom-bridge)"
+UA = "sgb-api-bridge/2.0 (+https://github.com/bilsectr/sgb-api-bridge)"
 STOP_AFTER_KNOWN = 40
 DELTA_MAX_PAGES = 200
 CHECKPOINT_EVERY = 25  # full sync: kac sayfada bir state'i diske yaz
 
-_ROOT_OVERRIDE = os.environ.get("USOM_BRIDGE_ROOT")
+_ROOT_OVERRIDE = os.environ.get("SGB_BRIDGE_ROOT")
 ROOT = Path(_ROOT_OVERRIDE) if _ROOT_OVERRIDE else Path(__file__).resolve().parent.parent
 DOCS_DIR = ROOT / "docs"
 STATE_FILE = ROOT / "state" / "seen_ids.json"
 
 # Loop mode
-LOOP_DELTA_INTERVAL = int(os.environ.get("USOM_BRIDGE_DELTA_INTERVAL_SEC", "3600"))
-LOOP_FULL_INTERVAL_DAYS = int(os.environ.get("USOM_BRIDGE_FULL_INTERVAL_DAYS", "7"))
+LOOP_DELTA_INTERVAL = int(os.environ.get("SGB_BRIDGE_DELTA_INTERVAL_SEC", "3600"))
+LOOP_FULL_INTERVAL_DAYS = int(os.environ.get("SGB_BRIDGE_FULL_INTERVAL_DAYS", "7"))
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     stream=sys.stdout,
 )
-log = logging.getLogger("usom")
+log = logging.getLogger("sgb")
 
 
 def load_state() -> dict:

@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/usom-bridge
+          images: ghcr.io/${{ github.repository_owner }}/sgb-api-bridge
           tags: |
             type=ref,event=tag
             type=sha,format=short

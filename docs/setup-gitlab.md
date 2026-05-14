@@ -6,14 +6,14 @@ Bu rehber, projeyi kurumun kendi GitLab sunucusuna klonlayıp tamamen offline (i
 
 - Self-hosted GitLab CE/EE (12.0+)
 - En az bir GitLab Runner (shell veya docker executor). Full sync 6-10 saat sürebileceği için runner'ın `timeout` ayarı yeterli olmalı (`/etc/gitlab-runner/config.toml` içinde `timeout = 36000` gibi).
-- Runner'ın USOM API'sine (`https://www.usom.gov.tr`) çıkışı olmalı. Kurumsal proxy varsa `HTTPS_PROXY` env değişkeni runner config'ine eklenmeli.
+- Runner'ın SGB API'sine (`https://www.siberguvenlik.gov.tr`) çıkışı olmalı. Kurumsal proxy varsa `HTTPS_PROXY` env değişkeni runner config'ine eklenmeli.
 
 ## 1. Repo'yu klonla
 
 ```bash
-git clone https://github.com/sinansh/usom-bridge.git
-cd usom-bridge
-git remote set-url origin https://gitlab.kurum.local/<group>/usom-bridge.git
+git clone https://github.com/bilsectr/sgb-api-bridge.git
+cd sgb-api-bridge
+git remote set-url origin https://gitlab.kurum.local/<group>/sgb-api-bridge.git
 git push -u origin main
 ```
 
@@ -22,7 +22,7 @@ git push -u origin main
 CI'nin commit/push yapabilmesi için bir token gerekiyor:
 
 1. Proje → **Settings** → **Access Tokens** → **Add new token**
-2. Name: `usom-bridge-ci`
+2. Name: `sgb-api-bridge-ci`
 3. Role: `Maintainer`
 4. Scopes: `write_repository`, `api`
 5. Token'ı kopyala (bir daha gösterilmez).
@@ -40,13 +40,13 @@ CI'nin commit/push yapabilmesi için bir token gerekiyor:
 Proje → **Build** → **Pipeline schedules** → **New schedule**
 
 **Delta (saatlik):**
-- Description: `USOM delta sync`
+- Description: `SGB delta sync`
 - Interval Pattern: `23 * * * *`
 - Target Branch: `main`
 - Variables: `SYNC_MODE` = `delta`
 
 **Full (haftalık):**
-- Description: `USOM full sync`
+- Description: `SGB full sync`
 - Interval Pattern: `0 3 * * 0`
 - Target Branch: `main`
 - Variables: `SYNC_MODE` = `full`
@@ -74,11 +74,11 @@ FortiGate gibi cihazlar dosyaları **anonim** olarak çekecek. Repo'yu uygun gö
 Feed'lere bu URL'lerden eriş:
 
 ```
-https://gitlab.kurum.local/<group>/usom-bridge/-/raw/main/docs/domain-list.txt
-https://gitlab.kurum.local/<group>/usom-bridge/-/raw/main/docs/ip-list.txt
-https://gitlab.kurum.local/<group>/usom-bridge/-/raw/main/docs/url-list.txt
-https://gitlab.kurum.local/<group>/usom-bridge/-/raw/main/docs/ip6-list.txt
-https://gitlab.kurum.local/<group>/usom-bridge/-/raw/main/docs/ip6net-list.txt
+https://gitlab.kurum.local/<group>/sgb-api-bridge/-/raw/main/docs/domain-list.txt
+https://gitlab.kurum.local/<group>/sgb-api-bridge/-/raw/main/docs/ip-list.txt
+https://gitlab.kurum.local/<group>/sgb-api-bridge/-/raw/main/docs/url-list.txt
+https://gitlab.kurum.local/<group>/sgb-api-bridge/-/raw/main/docs/ip6-list.txt
+https://gitlab.kurum.local/<group>/sgb-api-bridge/-/raw/main/docs/ip6net-list.txt
 ```
 
 ### Private repo senaryosu — GitLab Pages
@@ -89,21 +89,21 @@ https://gitlab.kurum.local/<group>/usom-bridge/-/raw/main/docs/ip6net-list.txt
 2. Proje → Settings → Pages → "Access Control" → **kapalı** (anonim erişim)
 3. Feed URL'leri:
    ```
-   https://<group>.<pages-domain>/usom-bridge/domain-list.txt
+   https://<group>.<pages-domain>/sgb-api-bridge/domain-list.txt
    ```
 
 ## 7. FortiGate konfigürasyonu (örnek)
 
 ```
 config system external-resource
-    edit "USOM-Domain"
+    edit "SGB-Domain"
         set type domain
-        set resource "https://gitlab.kurum.local/<group>/usom-bridge/-/raw/main/docs/domain-list.txt"
+        set resource "https://gitlab.kurum.local/<group>/sgb-api-bridge/-/raw/main/docs/domain-list.txt"
         set refresh-rate 60
     next
-    edit "USOM-IP"
+    edit "SGB-IP"
         set type address
-        set resource "https://gitlab.kurum.local/<group>/usom-bridge/-/raw/main/docs/ip-list.txt"
+        set resource "https://gitlab.kurum.local/<group>/sgb-api-bridge/-/raw/main/docs/ip-list.txt"
         set refresh-rate 60
     next
 end
@@ -113,6 +113,6 @@ end
 
 - **`HATA: GIT_PUSH_TOKEN tanimli degil`**: 3. adımı atladın.
 - **`remote: HTTP Basic: Access denied`**: Token'ın scope'unda `write_repository` yok ya da süresi dolmuş. Yeniden oluştur.
-- **Pipeline başladı ama hiçbir şey değişmiyor**: USOM API'ye erişim yok. Runner'ın `curl https://www.usom.gov.tr/api/address/index?type=ip` ile çıkıp çıkamadığını kontrol et.
+- **Pipeline başladı ama hiçbir şey değişmiyor**: SGB API'ye erişim yok. Runner'ın `curl https://www.siberguvenlik.gov.tr/api/address/index?type=ip` ile çıkıp çıkamadığını kontrol et.
 - **Runner timeout'a takılıyor ama otomatik tetiklenmiyor**: `GIT_PUSH_TOKEN`'a `api` scope'u verilmemiş. Token'ı güncelle.
 - **stats.json'da `last_update_utc` 48 saatten eski**: healthcheck adımı fail edecek. Pipeline tarihine bak, hangi job'ta takılındı incele.

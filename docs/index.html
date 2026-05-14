@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>USOM Bridge - Threat Feed for Firewalls</title>
+<title>SGB API Bridge - Threat Feed for Firewalls</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root { --fg:#111; --muted:#666; --bg:#fafafa; --card:#fff; --acc:#0a66c2; }
@@ -28,9 +28,10 @@
 </head>
 <body>
 <main>
-  <h1>USOM Bridge</h1>
-  <p class="sub">USOM tehdit beslemesini FortiGate, Sophos, Palo Alto, pfSense vb. guvenlik
-  duvarlarinin dogrudan tuketebilecegi <b>duz metin</b> formatina ceviren acik kaynak araci.</p>
+  <h1>SGB API Bridge</h1>
+  <p class="sub">SGB (Siber Guvenlik Baskanligi, eski USOM) tehdit beslemesini FortiGate, Sophos,
+  Palo Alto, pfSense vb. guvenlik duvarlarinin dogrudan tuketebilecegi <b>duz metin</b>
+  formatina ceviren acik kaynak araci.</p>
 
   <h2>Canli besleme URL'leri</h2>
   <div class="grid">
@@ -49,32 +50,32 @@
 
   <h2>FortiGate ornek konfigurasyonu</h2>
 <pre>config system external-resource
-    edit "USOM-Domain"
+    edit "SGB-Domain"
         set type domain
-        set resource "https://sinansh.github.io/usom-bridge/domain-list.txt"
+        set resource "https://bilsectr.github.io/sgb-api-bridge/domain-list.txt"
         set refresh-rate 60
     next
-    edit "USOM-IP"
+    edit "SGB-IP"
         set type address
-        set resource "https://sinansh.github.io/usom-bridge/ip-list.txt"
+        set resource "https://bilsectr.github.io/sgb-api-bridge/ip-list.txt"
         set refresh-rate 60
     next
 end</pre>
 
   <h2>Nasil calisir?</h2>
   <ul>
-    <li><b>Delta sync</b> saatte bir USOM API'sinin yalniz yeni kayitlarini ceker (~1-3 dk).</li>
-    <li><b>Full sync</b> haftada bir tum kayitlari yeniden ceker (drift duzeltici, ~4 saat).</li>
+    <li><b>Delta sync</b> saatte bir SGB API'sinin yalniz yeni kayitlarini ceker (~1-3 dk).</li>
+    <li><b>Full sync</b> haftada bir tum kayitlari yeniden ceker (drift duzeltici, ~5-10 saat).</li>
     <li>Tum islem GitHub Actions'ta calisir, ciktilar GitHub Pages uzerinden Fastly CDN ile dagitilir.</li>
-    <li>Veri kaynagi: <a href="https://www.usom.gov.tr/api/address/index">USOM Open Threat Feed API</a></li>
+    <li>Veri kaynagi: <a href="https://www.siberguvenlik.gov.tr/api/address/index">SGB Open Threat Feed API</a></li>
   </ul>
 
   <h2>Sorumluluk reddi</h2>
-  <p>Bu proje USOM ile resmi bir bagi olmayan, kar amaci gutmeyen, acik kaynak bir aractir.
-     Veriler "as-is" sunulur.</p>
+  <p>Bu proje SGB / Siber Guvenlik Baskanligi ile resmi bir bagi olmayan, kar amaci gutmeyen,
+     acik kaynak bir aractir. Veriler "as-is" sunulur.</p>
 
   <footer>
-    Kaynak kod: <a href="https://github.com/sinansh/usom-bridge">github.com/sinansh/usom-bridge</a>
+    Kaynak kod: <a href="https://github.com/bilsectr/sgb-api-bridge">github.com/bilsectr/sgb-api-bridge</a>
   </footer>
 </main>
 </body>

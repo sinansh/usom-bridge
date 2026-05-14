@@ -1,27 +1,27 @@
 # Tek konteyner ile her sey: docker compose up -d
 #
 # Bu compose dosyasi all-in-one calistirir. Sync ve serve ayni konteyner'da.
-# Ilk full bootstrap'in 6-10 saat surebilecegini unutma — `docker logs -f usom-bridge`
+# Ilk full bootstrap'in 6-10 saat surebilecegini unutma — `docker logs -f sgb-api-bridge`
 # ile izleyebilirsin.
 #
 # Veri /data volume'unda kalir (state + feed'ler). Konteyner'i silsen bile veri yasar.
 
 services:
-  usom-bridge:
-    image: ghcr.io/sinansh/usom-bridge:latest
-    container_name: usom-bridge
+  sgb-api-bridge:
+    image: ghcr.io/bilsectr/sgb-api-bridge:latest
+    container_name: sgb-api-bridge
     restart: unless-stopped
     ports:
       - "8080:80"
     volumes:
-      - usom-data:/data
+      - sgb-data:/data
     environment:
       # Opsiyonel: delta sikligini saniye cinsinden override (default 3600)
-      # USOM_BRIDGE_DELTA_INTERVAL_SEC: "3600"
+      # SGB_BRIDGE_DELTA_INTERVAL_SEC: "3600"
       # Opsiyonel: full sync sikligi gun cinsinden (default 7)
-      # USOM_BRIDGE_FULL_INTERVAL_DAYS: "7"
+      # SGB_BRIDGE_FULL_INTERVAL_DAYS: "7"
       TZ: "Europe/Istanbul"
 
 volumes:
-  usom-data:
-    name: usom-bridge-data
+  sgb-data:
+    name: sgb-api-bridge-data

@@ -27,7 +27,7 @@ jobs:
         run: python scripts/sync.py --mode healthcheck
       - name: Commit & push
         run: |
-          git config user.name "usom-bridge-bot"
+          git config user.name "sgb-api-bridge-bot"
           git config user.email "noreply@github.com"
           git add docs/ state/
           if git diff --staged --quiet; then
