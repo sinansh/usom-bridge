@@ -3,18 +3,23 @@
 SGB API Bridge - SGB (eski USOM) API'sini duz metin feed'e donusturur.
 
 Modlar:
-    --mode full         : Tum tipler icin tum sayfalari ceker (~10-15+ saat).
-                          SADECE ilk bootstrap / sifirdan re-sync icin, elle calistirilir.
-    --mode delta        : Tum tipler icin yalniz yeni kayitlari ceker (~1-3 dk). Saatlik.
-                          Surekli calisan tek mekanizma budur.
-    --mode loop         : Container'lar icin: delta'yi surekli (saatlik) tetikler.
+    --mode full         : Tum tipler icin tum sayfalari ceker. per-page=1000 ile ~10-15 dk.
+                          Ilk bootstrap ve periyodik reconcile (silinen kayitlari temizleme)
+                          icin kullanilir.
+    --mode delta        : Tum tipler icin yalniz yeni kayitlari ceker (~saniyeler). Saatlik.
+                          Silinen kayitlari yakalayamaz - bunun icin full reconcile gerekir.
+    --mode loop         : Container'lar icin: delta'yi sureki tetikler, N delta'da bir
+                          full reconcile calistirir (SGB_BRIDGE_RECONCILE_EVERY).
     --mode healthcheck  : stats.json fresh mi diye bakar (delta workflow'da kullaniliyor).
 
 API:
-    GET https://siberguvenlik.gov.tr/api/address/index?type={domain|url|ip|ip6|ip6net}&page=N
-    Response: {"totalCount": N, "count": 20, "models": [...], "page": P, "pageCount": M}
+    GET https://siberguvenlik.gov.tr/api/address/index?type={domain|url|ip|ip6|ip6net}&page=N&per-page=K
+    Response: {"totalCount": N, "count": K, "models": [...], "page": P, "pageCount": M}
     Kayitlar tarihe gore newest-first siralanmis durumda.
     ID'ler tum tipler arasinda global ve monoton artan.
+    Liste mutable: API'den kayit SILINEBILIR; bu nedenle loop modu periyodik
+    full reconcile calistirir (bkz. SGB_BRIDGE_RECONCILE_EVERY).
+    Rate limit: 20 rps / 400 rpm.
 """
 import argparse
 import json
@@ -32,6 +37,9 @@ __version__ = "2.0.0"
 
 API_URL = "https://siberguvenlik.gov.tr/api/address/index"
 TYPES = ("domain", "url", "ip", "ip6", "ip6net")
+# API per-page parametresi: tek istekte donen kayit sayisi. pratikte 10000 bile kabul ediliyor. 1000 muhafazakar bir varsayilan: full sync
+# domain icin 22562 -> 452 sayfaya duser (~50x daha az istek).
+PER_PAGE = int(os.environ.get("SGB_BRIDGE_PER_PAGE", "1000"))
 SLEEP_OK_FULL = 1.0
 SLEEP_OK_DELTA = 1.0
 SLEEP_429_BASE = 15.0
@@ -39,8 +47,9 @@ MAX_RETRIES = 6
 TIMEOUT = 30
 UA = "sgb-api-bridge/2.0 (+https://github.com/bilsectr/sgb-api-bridge)"
 STOP_AFTER_KNOWN = 40
-# Delta'nin tek calismada gezecegi maksimum sayfa. Normal saatlik delta 3-10 sayfa kullanir;
-# bu tavan yalniz state cok bayatsa (orn. haftalarca delta calismadi) devreye girer.
+# Delta'nin tek calismada gezecegi maksimum sayfa. per-page=1000 ile normal saatlik delta
+# 1 sayfada biter; bu tavan yalniz state cok bayatsa (orn. haftalarca delta calismadi)
+# devreye girer.
 DELTA_MAX_PAGES = int(os.environ.get("SGB_BRIDGE_DELTA_MAX_PAGES", "1000"))
 CHECKPOINT_EVERY = 25  # full sync: kac sayfada bir state'i diske yaz
 
@@ -49,8 +58,12 @@ ROOT = Path(_ROOT_OVERRIDE) if _ROOT_OVERRIDE else Path(__file__).resolve().pare
 DOCS_DIR = ROOT / "docs"
 STATE_FILE = ROOT / "state" / "seen_ids.json"
 
-# Loop mode (delta-only; full sync otomatik calismaz, ilk bootstrap elle yapilir)
+# Loop mode: delta'yi surekli, full'u N delta'da bir tetikler.
+# Full reconcile gereklidir cunku API'den kayit silinebilir; saf delta silinmis
+# kayitlari final dosyadan temizleyemez (sadece yeni id'leri ekler).
+# 0 = full reconcile devre disi (eski davranis).
 LOOP_DELTA_INTERVAL = int(os.environ.get("SGB_BRIDGE_DELTA_INTERVAL_SEC", "3600"))
+LOOP_RECONCILE_EVERY = int(os.environ.get("SGB_BRIDGE_RECONCILE_EVERY", "24"))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -84,7 +97,7 @@ def fetch_page(session: requests.Session, typ: str, page: int) -> dict:
         try:
             r = session.get(
                 API_URL,
-                params={"type": typ, "page": page},
+                params={"type": typ, "page": page, "per-page": PER_PAGE},
                 timeout=TIMEOUT,
                 headers={"User-Agent": UA, "Accept": "application/json"},
             )
@@ -407,13 +420,19 @@ def sync(mode: str) -> None:
 
 
 def loop() -> None:
-    """Cron'suz container'lar icin: delta'yi LOOP_DELTA_INTERVAL'da surekli tetikler.
+    """Cron'suz container'lar icin: delta'yi LOOP_DELTA_INTERVAL'da surekli tetikler ve
+    LOOP_RECONCILE_EVERY delta'da bir full reconcile calistirir (silinen kayitlari temizler).
 
-    Full sync OTOMATIK CALISMAZ. Ilk bootstrap iki yoldan biriyle saglanir:
+    Ilk bootstrap iki yoldan biriyle saglanir:
       1. Imaja gomulu seed verisi (docs/ + state/ build aninda kopyalanir), veya
       2. Bir kez elle `python sync.py --mode full` calistirilmasi.
     """
-    log.info(f"LOOP basliyor (v{__version__}) - delta her {LOOP_DELTA_INTERVAL}s")
+    log.info(
+        f"LOOP basliyor (v{__version__}) - delta her {LOOP_DELTA_INTERVAL}s, "
+        f"reconcile her {LOOP_RECONCILE_EVERY} delta'da bir"
+        if LOOP_RECONCILE_EVERY > 0
+        else f"LOOP basliyor (v{__version__}) - delta her {LOOP_DELTA_INTERVAL}s (reconcile kapali)"
+    )
     state = load_state()
     if all(int(state.get(t, {}).get("max_id") or 0) == 0 for t in TYPES):
         log.warning(
@@ -421,15 +440,22 @@ def loop() -> None:
             f"(en fazla {DELTA_MAX_PAGES} sayfa/tip). Tam gecmis veri icin once "
             "`--mode full` calistir ya da seed verili imaj kullan."
         )
+    iteration = 0
     while True:
+        do_reconcile = (
+            LOOP_RECONCILE_EVERY > 0
+            and iteration > 0
+            and iteration % LOOP_RECONCILE_EVERY == 0
+        )
         try:
-            sync("delta")
+            sync("full" if do_reconcile else "delta")
         except KeyboardInterrupt:
             log.info("KeyboardInterrupt - cikiliyor")
             return
         except Exception:
-            log.exception("loop delta sirasinda hata - devam ediyor")
-        log.info(f"loop: {LOOP_DELTA_INTERVAL}s uyuyor")
+            log.exception("loop sync sirasinda hata - devam ediyor")
+        iteration += 1
+        log.info(f"loop: {LOOP_DELTA_INTERVAL}s uyuyor (iter={iteration})")
         try:
             time.sleep(LOOP_DELTA_INTERVAL)
         except KeyboardInterrupt:
