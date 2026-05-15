@@ -1,8 +1,8 @@
 {
-  "last_update_utc": "2026-05-15T19:57:46.997494+00:00",
+  "last_update_utc": "2026-05-15T21:32:12.177121+00:00",
   "mode": "delta",
   "counts": {
-    "domain": 451137,
+    "domain": 451138,
     "url": 6927,
     "ip": 14273,
     "ip6": 6,
@@ -11,42 +11,42 @@
   "in_progress": null,
   "state": {
     "domain": {
-      "max_id": 1118564,
+      "max_id": 1118566,
       "last_full_sync": "2026-05-14T05:53:45.489337+00:00",
-      "last_delta_sync": "2026-05-15T19:57:41.957235+00:00",
-      "total_count": 451305
+      "last_delta_sync": "2026-05-15T21:32:02.691885+00:00",
+      "total_count": 451306
     },
     "url": {
       "max_id": 851416,
       "last_full_sync": "2026-05-14T06:02:45.298069+00:00",
-      "last_delta_sync": "2026-05-15T19:57:43.296667+00:00",
+      "last_delta_sync": "2026-05-15T21:32:03.489712+00:00",
       "total_count": 6927
     },
     "ip": {
       "max_id": 1118540,
       "last_full_sync": "2026-05-14T06:21:20.407034+00:00",
-      "last_delta_sync": "2026-05-15T19:57:44.679541+00:00",
+      "last_delta_sync": "2026-05-15T21:32:09.705047+00:00",
       "total_count": 14273
     },
     "ip6": {
       "max_id": 780782,
       "last_full_sync": "2026-05-14T06:21:20.891481+00:00",
-      "last_delta_sync": "2026-05-15T19:57:45.819771+00:00",
+      "last_delta_sync": "2026-05-15T21:32:10.869340+00:00",
       "total_count": 6
     },
     "ip6net": {
       "max_id": 0,
       "last_full_sync": "2026-05-14T06:21:21.347690+00:00",
-      "last_delta_sync": "2026-05-15T19:57:46.826002+00:00",
+      "last_delta_sync": "2026-05-15T21:32:12.011342+00:00",
       "total_count": 0
     }
   },
   "db": {
     "per_type_active": {
-      "domain": 64981,
+      "domain": 64982,
       "ip": 41
     },
-    "total_active": 65022,
+    "total_active": 65023,
     "removed": 0,
     "by_connectiontype": {
       "AC": 345,
@@ -55,10 +55,10 @@
       "MC": 40,
       "MF": 9,
       "OT": 11441,
-      "PH": 53086
+      "PH": 53087
     },
     "by_category": {
-      "BP": 41404,
+      "BP": 41405,
       "CA": 162,
       "MC": 4164,
       "MD": 609,
