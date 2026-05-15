@@ -1,8 +1,8 @@
 {
-  "last_update_utc": "2026-05-15T13:11:59.176734+00:00",
+  "last_update_utc": "2026-05-15T15:33:58.788550+00:00",
   "mode": "delta",
   "counts": {
-    "domain": 451070,
+    "domain": 451119,
     "url": 6927,
     "ip": 14232,
     "ip6": 6,
@@ -11,34 +11,59 @@
   "in_progress": null,
   "state": {
     "domain": {
-      "max_id": 1118348,
+      "max_id": 1118446,
       "last_full_sync": "2026-05-14T05:53:45.489337+00:00",
-      "last_delta_sync": "2026-05-15T13:11:54.376881+00:00",
-      "total_count": 451238
+      "last_delta_sync": "2026-05-15T15:33:54.609137+00:00",
+      "total_count": 451287
     },
     "url": {
       "max_id": 851416,
       "last_full_sync": "2026-05-14T06:02:45.298069+00:00",
-      "last_delta_sync": "2026-05-15T13:11:55.847928+00:00",
+      "last_delta_sync": "2026-05-15T15:33:55.813656+00:00",
       "total_count": 6927
     },
     "ip": {
       "max_id": 1117928,
       "last_full_sync": "2026-05-14T06:21:20.407034+00:00",
-      "last_delta_sync": "2026-05-15T13:11:57.262199+00:00",
+      "last_delta_sync": "2026-05-15T15:33:57.141108+00:00",
       "total_count": 14232
     },
     "ip6": {
       "max_id": 780782,
       "last_full_sync": "2026-05-14T06:21:20.891481+00:00",
-      "last_delta_sync": "2026-05-15T13:11:58.153449+00:00",
+      "last_delta_sync": "2026-05-15T15:33:58.149573+00:00",
       "total_count": 6
     },
     "ip6net": {
       "max_id": 0,
       "last_full_sync": "2026-05-14T06:21:21.347690+00:00",
-      "last_delta_sync": "2026-05-15T13:11:59.110361+00:00",
+      "last_delta_sync": "2026-05-15T15:33:58.611208+00:00",
       "total_count": 0
+    }
+  },
+  "db": {
+    "per_type_active": {
+      "domain": 64963
+    },
+    "total_active": 64963,
+    "removed": 0,
+    "by_connectiontype": {
+      "AC": 345,
+      "BC": 100,
+      "EK": 1,
+      "MC": 40,
+      "MF": 9,
+      "OT": 11400,
+      "PH": 53068
+    },
+    "by_category": {
+      "BP": 41386,
+      "CA": 121,
+      "MC": 4164,
+      "MD": 609,
+      "MI": 80,
+      "MU": 94,
+      "PH": 18509
     }
   }
 }
