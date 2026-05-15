@@ -382,31 +382,6 @@ def write_stats(mode: str, state: dict) -> None:
     log.info(f"stats: {counts} in_progress={in_progress or 'none'}")
 
 
-def write_badge(state: dict) -> None:
-    # En son sync (herhangi bir tipin son delta'si) zamanini al
-    candidates = []
-    for typ in TYPES:
-        for k in ("last_delta_sync", "last_full_sync"):
-            v = state.get(typ, {}).get(k)
-            if v:
-                candidates.append(v)
-    if not candidates:
-        badge = {"schemaVersion": 1, "label": "last sync", "message": "never", "color": "lightgrey"}
-    else:
-        last = max(candidates)
-        dt = datetime.fromisoformat(last.replace("Z", "+00:00"))
-        mins = int((datetime.now(timezone.utc) - dt).total_seconds() // 60)
-        if mins < 60:
-            msg = f"{mins}m ago"
-        elif mins < 60 * 48:
-            msg = f"{mins // 60}h ago"
-        else:
-            msg = f"{mins // (60 * 24)}d ago"
-        color = "brightgreen" if mins < 180 else ("yellow" if mins < 60 * 48 else "red")
-        badge = {"schemaVersion": 1, "label": "last sync", "message": msg, "color": color}
-    (DOCS_DIR / "badge.json").write_text(json.dumps(badge), encoding="utf-8")
-
-
 def sync(mode: str) -> None:
     state = load_state()
     # Diagnostic: baslangic state'i
@@ -429,7 +404,6 @@ def sync(mode: str) -> None:
     finally:
         save_state(state)
         write_stats(mode, state)
-        write_badge(state)
 
 
 def loop() -> None:

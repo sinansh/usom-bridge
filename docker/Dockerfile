@@ -65,7 +65,7 @@ ENV SGB_BRIDGE_ROOT=/data \
     PYTHONUNBUFFERED=1
 
 HEALTHCHECK --interval=60s --timeout=5s --start-period=30s \
-  CMD curl -fsS http://127.0.0.1/badge.json > /dev/null || exit 1
+  CMD curl -fsS http://127.0.0.1/stats.json > /dev/null || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["all-in-one"]

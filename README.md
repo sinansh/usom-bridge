@@ -1,6 +1,6 @@
 # SGB API Bridge
 
-[![Last sync](https://img.shields.io/endpoint?url=https://bilsectr.github.io/sgb-api-bridge/badge.json)](https://bilsectr.github.io/sgb-api-bridge/stats.json)
+[![Last sync](https://img.shields.io/github/last-commit/bilsectr/sgb-api-bridge?label=last%20sync)](https://bilsectr.github.io/sgb-api-bridge/stats.json)
 [![Delta sync](https://github.com/bilsectr/sgb-api-bridge/actions/workflows/sync-delta.yml/badge.svg)](https://github.com/bilsectr/sgb-api-bridge/actions/workflows/sync-delta.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -63,7 +63,7 @@ Detay: [docs/setup-k8s.md](docs/setup-k8s.md)
 
 SGB API kayıtları tarih sırasına göre newest-first dönüyor ve ID'ler global monoton artıyor. Delta job'ı her tür için `state/seen_ids.json`'daki `max_id`'den büyük kayıtlara ulaşana kadar sayfaları dolaşıp, bilinen kayda denk gelince durur.
 
-> **Geçmiş veri zaten repo'da.** Bu repo'yu klonlayan / fork eden herkes, `docs/*-list.txt` ve `state/seen_ids.json` dosyalarını hazır alır. Delta sync bu noktadan devam eder — kendi ortamında full sync çalıştırman **gerekmez**. Docker imajı da bu veriyi içinde gömülü taşır (haftalık tazelenir).
+> **Geçmiş veri zaten repo'da.** Bu repo'yu klonlayan / fork eden herkes, `docs/*-list.txt` ve `state/seen_ids.json` dosyalarını hazır alır. Delta sync bu noktadan devam eder — kendi ortamında full sync çalıştırman **gerekmez**. Docker imajı da bu veriyi içinde gömülü taşır.
 
 ## Cihaz konfigürasyon örnekleri
 
@@ -105,20 +105,6 @@ Environment variables:
 | `SGB_BRIDGE_DELTA_INTERVAL_SEC` | `3600` | Loop modunda delta sıklığı (sn) |
 | `SGB_BRIDGE_DELTA_MAX_PAGES` | `1000` | Delta'nın tek seferde gezeceği maks. sayfa (bayat state güvenlik tavanı) |
 
-## Veri kaynağı
-
-SGB Open Threat Feed API: <https://siberguvenlik.gov.tr/api/address/index>
-
-Kayıt kategorileri (`desc` alanı):
-
-| Kod | Açıklama |
-|---|---|
-| PH | Oltalama (Phishing) |
-| BP | Bankacılık - Oltalama |
-| MD / MI / MU | Zararlı yazılım barındıran Domain / IP / URL |
-| MC | Komuta-Kontrol Merkezi |
-| CA | Siber saldırı (port tarama, brute force vb.) |
-
 ## Sorumluluk reddi
 
 Bu proje **SGB / Siber Güvenlik Başkanlığı ile resmi bir bağlantısı olmayan**, kâr amacı gütmeyen, açık kaynak bir araçtır. Üretim sistemlerinde "as-is" kullanılır; veri doğruluğundan SGB sorumludur.
@@ -126,3 +112,7 @@ Bu proje **SGB / Siber Güvenlik Başkanlığı ile resmi bir bağlantısı olma
 ## Lisans
 
 [MIT](LICENSE)
+
+## Yazar
+
+**Sinan ŞAHİN** — [LinkedIn](https://www.linkedin.com/in/sinansh/) · [GitHub](https://github.com/sinansh/)
