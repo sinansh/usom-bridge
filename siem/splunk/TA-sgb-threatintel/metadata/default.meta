@@ -1,0 +1,14 @@
+# TA-sgb-threatintel - global okuma, lookup'lar tum app'lerden erisilebilir.
+
+[]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[lookups]
+export = system
+
+[transforms]
+export = system
+
+[macros]
+export = system

@@ -1,0 +1,4 @@
+<nav search_view="search" color="#A11">
+  <view name="sgb_overview" default="true" />
+  <view name="search" />
+</nav>

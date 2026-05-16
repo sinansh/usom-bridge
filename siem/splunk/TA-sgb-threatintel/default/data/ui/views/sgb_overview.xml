@@ -1,0 +1,79 @@
+<dashboard version="1.1" theme="dark">
+  <label>SGB Threat Intel Overview</label>
+  <description>SGB indicator coverage, son 24 saat hit'leri, kategoriler.</description>
+
+  <row>
+    <panel>
+      <title>Lookup coverage (indicator sayisi)</title>
+      <single>
+        <title>IP indicators</title>
+        <search><query>| inputlookup sgb_ip_lookup | stats count</query></search>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Domain indicators</title>
+        <search><query>| inputlookup sgb_domain_lookup | stats count</query></search>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>URL indicators</title>
+        <search><query>| inputlookup sgb_url_lookup | stats count</query></search>
+      </single>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Connectiontype kirilimi (IP + Domain + URL)</title>
+      <chart>
+        <search>
+          <query>| inputlookup sgb_ip_lookup | eval indicator_type="ip"
+                 | append [| inputlookup sgb_domain_lookup | eval indicator_type="domain"]
+                 | append [| inputlookup sgb_url_lookup | eval indicator_type="url"]
+                 | stats count by connectiontype indicator_type
+                 | sort -count</query>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Criticality dagilimi</title>
+      <chart>
+        <search>
+          <query>| inputlookup sgb_ip_lookup | append [| inputlookup sgb_domain_lookup] | append [| inputlookup sgb_url_lookup]
+                 | stats count by criticality_level | sort criticality_level</query>
+        </search>
+        <option name="charting.chart">pie</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Son 24 saat - SGB DNS phishing hit'leri</title>
+      <table>
+        <search>
+          <query>`sgb_dns_phishing_search` | stats count by src_ip query criticality_level source | sort -count | head 50</query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Son 24 saat - SGB Botnet C2 outbound</title>
+      <table>
+        <search>
+          <query>`sgb_botnet_outbound_search` | sort -count | head 50</query>
+          <earliest>-24h</earliest>
+          <latest>now</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+</dashboard>
