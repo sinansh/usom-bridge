@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>SGB SIEM/TIP Entegrasyonları — QRadar, Splunk, MISP, OpenCTI, Sentinel</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="SGB tehdit beslemesini SIEM ve TIP ortamlarına ingest etmek için 7 adım-adım entegrasyon rehberi.">
+<link rel="stylesheet" href="../assets/sgb.css">
+</head>
+<body>
+
+<header class="top">
+  <nav class="nav">
+    <div class="brand"><span class="logo"></span><a href="../">SGB API Bridge</a></div>
+    <a class="navlink" href="../#feeds">Feed URL'leri</a>
+    <a class="navlink" href="../#engelle">Engelleme</a>
+    <a class="navlink" href="../#siem">SIEM</a>
+    <a class="navlink" href="../usecases/">Use Case'ler</a>
+    <a class="navlink active" href="./">Entegrasyonlar</a>
+    <span class="spacer"></span>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Tema değiştir">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <a class="btn primary" href="https://github.com/bilsectr/sgb-api-bridge" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+    <span class="tag">SIEM / TIP / XDR ingest</span>
+    <h1>Entegrasyon rehberleri</h1>
+    <p class="lede">
+      SGB tehdit beslemesini hedef sisteminize "5 dakikada ingest" tarzında adım-adım
+      anlatan 7 rehber. Her biri: ön koşullar, kurulum komutları, doğrulama, yenileme,
+      troubleshooting.
+    </p>
+  </section>
+
+  <section>
+    <h2>Rehberler</h2>
+    <div class="grid cards">
+      <a class="card" href="../view.html?file=integrations/qradar.md">
+        <div class="icon">🛡️</div>
+        <span class="pill">Reference Set + Map</span>
+        <h3>IBM QRadar</h3>
+        <p>Reference set + map CSV üretimi, REST API ile idempotent push, 3 başlangıç rule + AQL test paketi.</p>
+        <div class="meta"><span>~15 dk</span><span>v7.4+</span></div>
+      </a>
+      <a class="card" href="../view.html?file=integrations/splunk.md">
+        <div class="icon">🔎</div>
+        <span class="pill">TA paketi</span>
+        <h3>Splunk Enterprise / Cloud</h3>
+        <p>TA-sgb-threatintel.tar.gz install: 3 lookup, otomatik enrichment, 3 saved search + overview dashboard.</p>
+        <div class="meta"><span>~10 dk</span><span>Splunk 8/9</span></div>
+      </a>
+      <a class="card" href="../view.html?file=integrations/misp.md">
+        <div class="icon">🧬</div>
+        <span class="pill">STIX 2.1 Feed</span>
+        <h3>MISP</h3>
+        <p>Feed olarak ekle (URL) veya PyMISP air-gapped; per-type STIX 2.1 bundle + tag stratejisi.</p>
+        <div class="meta"><span>~10 dk</span><span>MISP 2.4.150+</span></div>
+      </a>
+      <a class="card" href="../view.html?file=integrations/opencti.md">
+        <div class="icon">🕸️</div>
+        <span class="pill">External Import Connector</span>
+        <h3>OpenCTI</h3>
+        <p>Resmi external-import-file-stix connector + custom Python connector iskeleti + lifecycle yönetimi.</p>
+        <div class="meta"><span>~15 dk</span><span>OpenCTI 5/6</span></div>
+      </a>
+      <a class="card" href="../view.html?file=integrations/sentinel.md">
+        <div class="icon">☁️</div>
+        <span class="pill">Logic App + TI Upload API</span>
+        <h3>Microsoft Sentinel</h3>
+        <p>STIX bundle → Graph TI Upload API; analytics rule önerileri; KQL externaldata fallback.</p>
+        <div class="meta"><span>~20 dk</span><span>Azure Sentinel</span></div>
+      </a>
+      <a class="card" href="../view.html?file=integrations/generic-stix.md">
+        <div class="icon">🧩</div>
+        <span class="pill muted">CrowdStrike · Defender · XSOAR · Elastic · Wazuh · Suricata</span>
+        <h3>Generic STIX / CSV</h3>
+        <p>STIX 2.1 / TAXII / CSV / text slice destekleyen herhangi bir SIEM/XDR/EDR/SOAR için pattern'lar.</p>
+        <div class="meta"><span>değişken</span><span>vendor-agnostik</span></div>
+      </a>
+      <a class="card" href="../view.html?file=integrations/README.md">
+        <div class="icon">📋</div>
+        <span class="pill muted">Index</span>
+        <h3>Tüm rehberler (README)</h3>
+        <p>Hangi entegrasyon kim için + artifact eşlemesi + üç URL kanalı (rolling / stable / version-locked).</p>
+        <div class="meta"><span>genel bakış</span></div>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Hızlı erişim — kalıcı URL'ler</h2>
+    <p class="section-sub">
+      Aşağıdaki üç kanaldan birini SIEM/TIP konfigine doğrudan verebilirsiniz.
+      <strong>Rolling</strong>: her saat tazelenir, URL'ler aynı kalır.
+      <strong>Stable</strong>: manuel tag, versiyon audit için.
+    </p>
+<pre><code># Rolling (saatlik tazelenen) - SIEM ingest icin onerilen
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/sgb-feeds.tar.gz
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/sgb-qradar-pack.tar.gz
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/TA-sgb-threatintel.tar.gz
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/sgb-domain.stix2.json
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/sgb-ip.stix2.json
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/SHA256SUMS
+
+# Stable snapshot
+https://github.com/bilsectr/sgb-api-bridge/releases/latest/download/sgb-feeds.tar.gz</code></pre>
+
+    <div class="callout">
+      <strong>Severity:</strong> QRadar ve Splunk aynı formülü kullanır —
+      <code>connectiontype × criticality_level</code> → 1-10. Tek kaynak:
+      <a href="https://github.com/bilsectr/sgb-api-bridge/blob/main/siem/qradar/severity-matrix.md" target="_blank" rel="noopener">severity-matrix.md</a>.
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="inner">
+    <div>
+      Hazırlayan: <span class="author">Sinan ŞAHİN</span><br>
+      <span style="font-size:12.5px">Kaynak kod: <a href="https://github.com/bilsectr/sgb-api-bridge">github.com/bilsectr/sgb-api-bridge</a></span>
+    </div>
+    <div class="links">
+      <a href="https://www.linkedin.com/in/sinansh/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/sinansh/" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    const root = document.documentElement;
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved);
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      const current = root.getAttribute('data-theme') || (prefersLight ? 'light' : 'dark');
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+  })();
+</script>
+
+</body>
+</html>

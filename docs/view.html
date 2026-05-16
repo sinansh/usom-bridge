@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title id="page-title">SGB API Bridge</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="SGB API Bridge dokumantasyon goruntuleyici.">
+<link rel="stylesheet" href="assets/sgb.css">
+<!-- highlight.js light/dark themes; biz dark default -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css">
+</head>
+<body>
+
+<header class="top">
+  <nav class="nav">
+    <div class="brand"><span class="logo"></span><a href="./">SGB API Bridge</a></div>
+    <a class="navlink" href="./#feeds">Feed URL'leri</a>
+    <a class="navlink" href="./#engelle">Engelleme</a>
+    <a class="navlink" href="./#siem">SIEM</a>
+    <a class="navlink" href="usecases/">Use Case'ler</a>
+    <a class="navlink" href="integrations/">Entegrasyonlar</a>
+    <span class="spacer"></span>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Tema degistir">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <a class="btn primary" href="https://github.com/bilsectr/sgb-api-bridge" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+</header>
+
+<main class="narrow">
+  <article class="md" id="md-root">
+    <p class="section-sub">Yukleniyor…</p>
+  </article>
+</main>
+
+<footer>
+  <div class="inner">
+    <div>
+      Hazirlayan: <span class="author">Sinan SAHIN</span><br>
+      <span style="font-size:12.5px">Kaynak kod: <a href="https://github.com/bilsectr/sgb-api-bridge">github.com/bilsectr/sgb-api-bridge</a></span>
+    </div>
+    <div class="links">
+      <a href="https://www.linkedin.com/in/sinansh/" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/sinansh/" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/common.min.js"></script>
+<script>
+  // Theme toggle (paylasilan)
+  (function () {
+    const root = document.documentElement;
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved);
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      const current = root.getAttribute('data-theme') || (prefersLight ? 'light' : 'dark');
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+  })();
+</script>
+<script src="assets/md-view.js"></script>
+
+</body>
+</html>

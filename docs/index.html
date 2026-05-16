@@ -2,270 +2,26 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>SGB API Bridge — SGB (eski USOM) Tehdit Beslemesi (FortiGate, Sophos, Palo Alto, pfSense)</title>
+<title>SGB API Bridge — Tehdit beslemesi: firewall'da engelleyin, SIEM'de izleyin</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Siber Güvenlik Başkanlığı (eski USOM) zararlı bağlantı listesini güvenlik duvarlarınıza saatlik güncellenen düz metin formatında sunan açık kaynak köprü.">
-<style>
-  :root {
-    --bg: #0b1020;
-    --bg-2: #0f1530;
-    --panel: #131a37;
-    --panel-2: #1a2249;
-    --border: #243064;
-    --fg: #e6ecff;
-    --muted: #9aa6cf;
-    --acc: #4f8cff;
-    --acc-2: #6fffd0;
-    --warn: #ffb84d;
-    --bad: #ff6b8a;
-    --good: #5dd39e;
-    --code-bg: #0a0f24;
-    --shadow: 0 10px 30px rgba(0,0,0,.35);
-  }
-  :root[data-theme="light"] {
-    --bg: #f6f8fc;
-    --bg-2: #eef2fa;
-    --panel: #ffffff;
-    --panel-2: #f3f6fd;
-    --border: #dfe5f3;
-    --fg: #0f1530;
-    --muted: #56638a;
-    --acc: #2456c7;
-    --acc-2: #0a8b67;
-    --code-bg: #0f1530;
-    --shadow: 0 6px 20px rgba(20,30,80,.08);
-  }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]):not([data-theme="light"]) {
-      --bg: #f6f8fc;
-      --bg-2: #eef2fa;
-      --panel: #ffffff;
-      --panel-2: #f3f6fd;
-      --border: #dfe5f3;
-      --fg: #0f1530;
-      --muted: #56638a;
-      --acc: #2456c7;
-      --acc-2: #0a8b67;
-      --code-bg: #0f1530;
-      --shadow: 0 6px 20px rgba(20,30,80,.08);
-    }
-  }
-
-  .theme-toggle {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--panel);
-    color: var(--fg); cursor: pointer; padding: 0;
-    transition: transform .15s, border-color .15s;
-  }
-  .theme-toggle:hover { border-color: var(--acc); transform: translateY(-1px); }
-  .theme-toggle svg { width: 18px; height: 18px; }
-  .theme-toggle .icon-sun { display: none; }
-  .theme-toggle .icon-moon { display: block; }
-  :root[data-theme="light"] .theme-toggle .icon-sun { display: block; }
-  :root[data-theme="light"] .theme-toggle .icon-moon { display: none; }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) .theme-toggle .icon-sun { display: block; }
-    :root:not([data-theme="dark"]) .theme-toggle .icon-moon { display: none; }
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    font: 15px/1.6 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: var(--fg);
-    background: radial-gradient(1200px 600px at 80% -10%, rgba(79,140,255,.18), transparent 60%),
-                radial-gradient(900px 500px at -10% 10%, rgba(111,255,208,.10), transparent 60%),
-                var(--bg);
-    min-height: 100vh;
-  }
-  a { color: var(--acc); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  code, pre, kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
-  code { background: rgba(127,140,200,.15); padding: 1px 6px; border-radius: 4px; }
-  pre {
-    background: var(--code-bg);
-    color: #e6ecff;
-    padding: 1rem 1.1rem;
-    border-radius: 10px;
-    overflow: auto;
-    border: 1px solid var(--border);
-    line-height: 1.5;
-  }
-  pre code { background: transparent; padding: 0; color: inherit; }
-
-  header.top {
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
-    backdrop-filter: blur(8px);
-    position: sticky; top: 0; z-index: 50;
-  }
-  .nav {
-    max-width: 1100px; margin: 0 auto; padding: .9rem 1.2rem;
-    display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap;
-  }
-  .brand { font-weight: 700; letter-spacing: .2px; display: flex; align-items: center; gap: .6rem; }
-  .brand .logo {
-    width: 26px; height: 26px; border-radius: 7px;
-    background: conic-gradient(from 120deg, var(--acc), var(--acc-2), var(--acc));
-    box-shadow: 0 0 18px rgba(79,140,255,.45);
-  }
-  .nav a.navlink { color: var(--muted); font-size: 14px; }
-  .nav a.navlink:hover { color: var(--fg); text-decoration: none; }
-  .nav .spacer { flex: 1; }
-  .btn {
-    display: inline-block; padding: .55rem .9rem; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--panel);
-    color: var(--fg); font-weight: 600; font-size: 13.5px;
-  }
-  .btn.primary { background: linear-gradient(135deg, var(--acc), #2d6cf0); border-color: transparent; color: white; }
-  .btn:hover { text-decoration: none; transform: translateY(-1px); }
-
-  main { max-width: 1100px; margin: 0 auto; padding: 2.4rem 1.2rem 4rem; }
-
-  .hero { padding: 1rem 0 1.6rem; }
-  .hero h1 {
-    font-size: clamp(1.8rem, 3.2vw, 2.6rem);
-    line-height: 1.15; margin: .2rem 0 .8rem; letter-spacing: -.5px;
-  }
-  .hero .tag {
-    display: inline-block; font-size: 12px; font-weight: 600;
-    padding: .25rem .6rem; border-radius: 999px;
-    background: rgba(79,140,255,.12); color: var(--acc);
-    border: 1px solid rgba(79,140,255,.35);
-    margin-bottom: .8rem;
-  }
-  .hero p.lede { color: var(--muted); font-size: 1.05rem; max-width: 760px; margin: 0 0 1.1rem; }
-  .hero .cta { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .6rem; }
-
-  .stats {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: .8rem; margin: 1.4rem 0 .6rem;
-  }
-  .stat {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: .9rem 1rem; box-shadow: var(--shadow);
-  }
-  .stat .v { font-size: 1.4rem; font-weight: 700; }
-  .stat .k { color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: .5px; }
-
-  section { margin: 2.6rem 0; }
-  h2 {
-    font-size: 1.4rem; margin: 0 0 .3rem; letter-spacing: -.2px;
-    display: flex; align-items: center; gap: .6rem;
-  }
-  h2 .hash { color: var(--muted); font-weight: 400; }
-  h3 { font-size: 1.05rem; margin: 1.2rem 0 .5rem; }
-  .section-sub { color: var(--muted); margin: 0 0 1.1rem; max-width: 780px; }
-
-  .grid { display: grid; gap: .9rem; }
-  .grid.feeds { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-  .feed {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 1rem 1.1rem; box-shadow: var(--shadow); transition: transform .12s, border-color .12s;
-  }
-  .feed:hover { transform: translateY(-2px); border-color: var(--acc); }
-  .feed .row { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
-  .feed .lbl { font-weight: 700; }
-  .feed .count { color: var(--muted); font-size: 12.5px; }
-  .feed .url {
-    display: block; margin-top: .5rem;
-    font-family: ui-monospace, monospace; font-size: 12.5px;
-    color: var(--acc); word-break: break-all;
-  }
-  .feed .copy {
-    margin-top: .55rem; display: inline-flex; align-items: center; gap: .35rem;
-    font-size: 12px; cursor: pointer; color: var(--muted);
-    background: transparent; border: 1px solid var(--border); padding: .25rem .55rem; border-radius: 6px;
-  }
-  .feed .copy:hover { color: var(--fg); border-color: var(--acc); }
-
-  .deploy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: .9rem; }
-  .deploy {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 1.1rem; box-shadow: var(--shadow);
-  }
-  .deploy .icon {
-    width: 36px; height: 36px; border-radius: 9px;
-    background: linear-gradient(135deg, rgba(79,140,255,.25), rgba(111,255,208,.15));
-    display: flex; align-items: center; justify-content: center; font-size: 18px;
-    margin-bottom: .55rem; border: 1px solid var(--border);
-  }
-  .deploy h3 { margin: .2rem 0 .3rem; }
-  .deploy p { color: var(--muted); font-size: 13.5px; margin: 0 0 .6rem; }
-  .deploy .pill {
-    display: inline-block; font-size: 11px; padding: .15rem .5rem; border-radius: 999px;
-    background: rgba(93,211,158,.12); color: var(--good); border: 1px solid rgba(93,211,158,.3);
-    margin-bottom: .5rem;
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex; flex-wrap: wrap; gap: .3rem;
-    background: var(--panel-2); border: 1px solid var(--border);
-    border-radius: 10px; padding: .35rem; margin-bottom: .9rem;
-  }
-  .tab-btn {
-    background: transparent; border: none; color: var(--muted);
-    padding: .5rem .9rem; border-radius: 7px; cursor: pointer;
-    font-size: 13.5px; font-weight: 600; font-family: inherit;
-  }
-  .tab-btn:hover { color: var(--fg); }
-  .tab-btn.active { background: var(--panel); color: var(--fg); box-shadow: var(--shadow); }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  .callout {
-    background: linear-gradient(180deg, rgba(79,140,255,.07), transparent);
-    border: 1px solid var(--border); border-left: 3px solid var(--acc);
-    border-radius: 10px; padding: .9rem 1.1rem; margin: 1rem 0;
-  }
-  .callout.warn { border-left-color: var(--warn); background: linear-gradient(180deg, rgba(255,184,77,.08), transparent); }
-  .callout strong { color: var(--fg); }
-
-  table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--border); font-size: 13.5px; }
-  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
-  td code { font-size: 12.5px; }
-
-  .toc {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: .9rem 1.1rem; margin: 1.3rem 0 0;
-  }
-  .toc ul { columns: 2; column-gap: 2rem; margin: .3rem 0; padding-left: 1.1rem; }
-  @media (max-width: 640px) { .toc ul { columns: 1; } }
-  .toc li { break-inside: avoid; margin: .15rem 0; }
-
-  footer {
-    margin-top: 4rem; padding: 2rem 1.2rem;
-    border-top: 1px solid var(--border); color: var(--muted); font-size: 13.5px;
-  }
-  footer .inner { max-width: 1100px; margin: 0 auto;
-    display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
-  footer .author { color: var(--fg); font-weight: 600; }
-  footer .links { display: flex; gap: .5rem; }
-  footer .links a {
-    display: inline-flex; align-items: center; gap: .4rem;
-    padding: .4rem .7rem; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--panel); color: var(--fg);
-  }
-  footer .links a:hover { border-color: var(--acc); text-decoration: none; }
-  footer svg { width: 16px; height: 16px; }
-</style>
+<meta name="description" content="Siber Güvenlik Başkanlığı (eski USOM) tehdit beslemesini iki amaçla servis eder: firewall'larda engelleme için düz metin feed (FortiGate, Sophos, Palo Alto, pfSense) ve SIEM/TIP ortamlarında izleme için STIX 2.1 bundle, QRadar reference set/map, Splunk TA, 20 use case kütüphanesi.">
+<link rel="stylesheet" href="assets/sgb.css">
 </head>
 <body>
 
 <header class="top">
   <nav class="nav">
-    <div class="brand"><span class="logo"></span> SGB API Bridge</div>
+    <div class="brand"><span class="logo"></span><a href="./">SGB API Bridge</a></div>
     <a class="navlink" href="#feeds">Feed URL'leri</a>
-    <a class="navlink" href="#deploy">Kurulum</a>
-    <a class="navlink" href="#firewalls">Firewall entegrasyonu</a>
-    <a class="navlink" href="#siem">SIEM Pack</a>
+    <a class="navlink" href="#engelle">Engelleme</a>
+    <a class="navlink" href="#siem">SIEM / İzleme</a>
+    <a class="navlink" href="usecases/">Use Case'ler</a>
+    <a class="navlink" href="integrations/">Entegrasyonlar</a>
     <a class="navlink" href="#how">Nasıl çalışır</a>
     <span class="spacer"></span>
     <button class="theme-toggle" id="theme-toggle" aria-label="Tema değiştir" title="Tema değiştir">
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
     </button>
     <a class="btn primary" href="https://github.com/bilsectr/sgb-api-bridge" target="_blank" rel="noopener">GitHub</a>
   </nav>
@@ -274,17 +30,19 @@
 <main>
 
   <section class="hero">
-    <span class="tag">USOM → SGB · Saatlik güncelleme · MIT lisans</span>
-    <h1>SGB (eski USOM) zararlı bağlantı listesini güvenlik duvarınızın anladığı dilden konuşturun.</h1>
+    <span class="tag">USOM → SGB · Saatlik · MIT · STIX 2.1 + QRadar + Splunk</span>
+    <h1>SGB tehdit beslemesini hem engelleme cihazınızda, hem SIEM'inizde konuşturun.</h1>
     <p class="lede">
-      <strong>SGB API Bridge</strong>, Siber Güvenlik Başkanlığı (eski <strong>USOM</strong>) tehdit beslemesini
-      FortiGate, Sophos, Palo Alto, pfSense, Pi-hole ve Squid gibi cihazların doğrudan tüketebileceği
-      <strong>düz metin (one-per-line)</strong> formatına çeviren açık kaynak köprüdür. Saatlik delta sync ile
-      sürekli güncel, fork edip kendi GitHub Pages / GitLab / Docker / Kubernetes ortamınızda da koşturabilirsiniz.
+      <strong>SGB API Bridge</strong> tek bir kaynaktan iki ayrı görevi servis eder:
+      <strong>(1) düz metin feed</strong> — FortiGate, Sophos, Palo Alto, pfSense gibi cihazlarda
+      doğrudan blok listesi, ve <strong>(2) zenginleştirilmiş SIEM Pack</strong> — STIX 2.1
+      bundle, QRadar reference set/map, Splunk TA, 20 use case kütüphanesi.
+      Saatlik delta sync, açık kaynak, GitHub Pages / Docker / K8s / GitLab dağıtım seçenekleri.
     </p>
     <div class="cta">
-      <a class="btn primary" href="#feeds">Feed URL'lerine git</a>
-      <a class="btn" href="#firewalls">Firewall'a nasıl tanıtırım?</a>
+      <a class="btn primary" href="#engelle">Engelleme — firewall'a tanıt</a>
+      <a class="btn primary" href="#siem">İzleme — SIEM kur</a>
+      <a class="btn" href="#feeds">Feed URL'leri</a>
       <a class="btn" href="https://github.com/bilsectr/sgb-api-bridge" target="_blank" rel="noopener">Kaynak kod</a>
     </div>
 
@@ -292,25 +50,60 @@
       <div class="stat"><div class="k">Domain</div><div class="v" id="s-domain">~450K</div></div>
       <div class="stat"><div class="k">IPv4</div><div class="v" id="s-ip">~14K</div></div>
       <div class="stat"><div class="k">URL</div><div class="v" id="s-url">~7K</div></div>
+      <div class="stat"><div class="k">Use Case</div><div class="v"><a href="usecases/" style="color:inherit">20</a></div></div>
+      <div class="stat"><div class="k">Entegrasyon</div><div class="v"><a href="integrations/" style="color:inherit">7</a></div></div>
     </div>
   </section>
 
-  <div class="toc">
-    <strong>Bu sayfada</strong>
-    <ul>
-      <li><a href="#feeds">Canlı feed URL'leri</a></li>
-      <li><a href="#deploy">Dağıtım seçenekleri (4 model)</a></li>
-      <li><a href="#firewalls">Firewall / cihaz entegrasyonu</a></li>
-      <li><a href="#siem">SIEM Pack (QRadar, Splunk, STIX 2.1)</a></li>
-      <li><a href="#how">Nasıl çalışır?</a></li>
-    </ul>
-  </div>
+  <section>
+    <h2>İki yol, tek kaynak <span class="hash">#two-paths</span></h2>
+    <p class="section-sub">
+      İhtiyacınıza göre seçin. İkisini birden de yapabilirsiniz — aynı SGB API'sinden
+      farklı artifact'lar üretiriz, biri firewall'unuza, diğeri SIEM'inize gider.
+    </p>
+    <div class="choice">
+      <a class="path" href="#engelle">
+        <div class="lbl">Yol 1 — Engelleme</div>
+        <h3>🛡️ Firewall'da blok</h3>
+        <p>
+          URL'yi cihaza ver, saatte bir kendi çekip yükler. Manuel "indir + yükle"
+          döngüsü yok. <strong>Düz metin</strong> formatı.
+        </p>
+        <div class="stack">
+          <span class="chip">FortiGate</span>
+          <span class="chip">Palo Alto</span>
+          <span class="chip">Sophos XG</span>
+          <span class="chip">pfSense</span>
+          <span class="chip">Pi-hole</span>
+          <span class="chip">MikroTik</span>
+        </div>
+        <span class="more">Firewall kurulum →</span>
+      </a>
+      <a class="path" href="#siem">
+        <div class="lbl">Yol 2 — İzleme</div>
+        <h3>🔍 SIEM'de korelasyon + alarm</h3>
+        <p>
+          Zenginleştirilmiş kayıtlar (CT, criticality, source) ile rule yaz,
+          eşleşme alarmı üret, raporla. <strong>STIX 2.1 + reference set + TA</strong>.
+        </p>
+        <div class="stack">
+          <span class="chip">QRadar</span>
+          <span class="chip">Splunk</span>
+          <span class="chip">MISP</span>
+          <span class="chip">OpenCTI</span>
+          <span class="chip">Sentinel</span>
+          <span class="chip">Falcon · XDR · XSOAR</span>
+        </div>
+        <span class="more">SIEM Pack kurulum →</span>
+      </a>
+    </div>
+  </section>
 
   <section id="feeds">
-    <h2>Canlı feed URL'leri</h2>
+    <h2>Canlı feed URL'leri <span class="hash">#feeds</span></h2>
     <p class="section-sub">
-      Aşağıdaki URL'leri firewall'unuzun "external feed" / "threat list" / "block list" alanına
-      doğrudan verebilirsiniz. Saatlik tazelenir, public CDN (Fastly) üzerinden servis edilir.
+      Engelleme cihazlarına doğrudan verebileceğiniz public URL'ler.
+      Saatlik tazelenir, Fastly CDN üzerinden servis edilir.
     </p>
 
     <div class="grid feeds">
@@ -346,71 +139,21 @@
     </div>
 
     <div class="callout">
-      <strong>Format:</strong> Her dosya satır başına <em>tek bir kayıt</em> içerir (domain, IP veya URL).
+      <strong>Format:</strong> Her dosya satır başına <em>tek bir kayıt</em> içerir.
       Yorum satırı, header veya BOM yoktur — FortiGate <code>system external-resource</code>,
-      Palo Alto <code>external-list</code>, pfBlockerNG ve benzeri özellikler için doğrudan tüketilebilir.
+      Palo Alto <code>external-list</code>, pfBlockerNG için doğrudan tüketilebilir.
+      SIEM tarafı için zenginleştirilmiş CSV/STIX kanalı vardır
+      (<a href="#siem">aşağıda</a>, GitHub Release rolling).
     </div>
   </section>
 
-  <section id="deploy">
-    <h2>Dağıtım seçenekleri</h2>
+  <!-- =================== ENGELLEME =================== -->
+  <section id="engelle">
+    <h2>🛡️ Engelleme — firewall / proxy entegrasyonu <span class="hash">#engelle</span></h2>
     <p class="section-sub">
-      Projeyi kullanmanın <strong>dört farklı yolu</strong> vardır. İhtiyacınıza göre seçin —
-      hepsi aynı çıktıyı üretir, sadece kim host eder ve nereden servis edilir farkı vardır.
-    </p>
-
-    <div class="deploy-grid">
-      <div class="deploy">
-        <div class="icon">☁️</div>
-        <span class="pill">Önerilen · Sıfır kurulum</span>
-        <h3>1) GitHub Pages (public)</h3>
-        <p>Bu sayfa zaten bu modelde çalışıyor. URL'leri firewall'a verin, bitti. Kendi adınıza fork da edebilirsiniz.</p>
-        <a href="https://github.com/bilsectr/sgb-api-bridge/blob/main/docs/setup-github.md" target="_blank" rel="noopener">Kurulum rehberi →</a>
-      </div>
-      <div class="deploy">
-        <div class="icon">🏢</div>
-        <span class="pill" style="background:rgba(255,184,77,.12);color:var(--warn);border-color:rgba(255,184,77,.3)">Air-gapped</span>
-        <h3>2) Self-hosted GitLab</h3>
-        <p>İnternet erişimi olmayan kurumlar için: GitLab Runner üzerinde scheduled pipeline, dahili Pages.</p>
-        <a href="https://github.com/bilsectr/sgb-api-bridge/blob/main/docs/setup-gitlab.md" target="_blank" rel="noopener">Kurulum rehberi →</a>
-      </div>
-      <div class="deploy">
-        <div class="icon">🐳</div>
-        <span class="pill">İndir-çalıştır-unut</span>
-        <h3>3) Docker</h3>
-        <p>Tek konteyner, içinde geçmiş veri gömülü. <code>docker run</code> ile saatler içinde ayakta.</p>
-        <a href="https://github.com/bilsectr/sgb-api-bridge/blob/main/docs/setup-docker.md" target="_blank" rel="noopener">Kurulum rehberi →</a>
-      </div>
-      <div class="deploy">
-        <div class="icon">⎈</div>
-        <span class="pill">Kurumsal</span>
-        <h3>4) Kubernetes</h3>
-        <p>CronJob + Deployment + Service + PVC. Helm/kustomize ile mevcut cluster'ınıza entegre.</p>
-        <a href="https://github.com/bilsectr/sgb-api-bridge/blob/main/docs/setup-k8s.md" target="_blank" rel="noopener">Kurulum rehberi →</a>
-      </div>
-    </div>
-
-    <h3 style="margin-top:1.6rem">Docker — hızlı başlangıç</h3>
-<pre><code>docker run -d \
-  --name sgb-api-bridge \
-  -p 8080:80 \
-  -v sgb-api-bridge-data:/data \
-  --restart unless-stopped \
-  ghcr.io/bilsectr/sgb-api-bridge:latest
-
-# Feed: http://&lt;sunucu&gt;:8080/domain-list.txt</code></pre>
-
-    <h3>Kubernetes — hızlı başlangıç</h3>
-<pre><code>git clone https://github.com/bilsectr/sgb-api-bridge.git
-kubectl apply -k sgb-api-bridge/k8s/</code></pre>
-  </section>
-
-  <section id="firewalls">
-    <h2>Firewall / cihaz entegrasyonu</h2>
-    <p class="section-sub">
-      Aşağıdaki sekmelerden cihazınızı seçin. Tüm örneklerde varsayılan base URL
-      <code>https://bilsectr.github.io/sgb-api-bridge/</code>'dir; kendi fork'unuzu / Docker / GitLab
-      sunucunuzu kullanıyorsanız sadece host kısmını değiştirin.
+      Cihazınızı seçin. Tüm örneklerde varsayılan base URL
+      <code>https://bilsectr.github.io/sgb-api-bridge/</code>'dir; kendi fork / Docker /
+      GitLab sunucunuzu kullanıyorsanız sadece host kısmını değiştirin.
     </p>
 
     <div class="tabs" role="tablist">
@@ -424,11 +167,10 @@ kubectl apply -k sgb-api-bridge/k8s/</code></pre>
     </div>
 
     <div class="tab-panel active" id="tab-fortigate">
-      <p>FortiGate'in <code>system external-resource</code> (External Block List / Threat Feed) özelliği bu listeleri
-        <strong>yerel olarak</strong> destekler — manuel "indir &amp; yükle" döngüsüne gerek yoktur, FortiGate her
-        <code>refresh-rate</code> dakikasında URL'yi kendi çekip belleğine yükler.</p>
+      <p>FortiGate <code>system external-resource</code> özelliği listeleri yerel olarak destekler;
+        her <code>refresh-rate</code> dakikasında URL'yi kendi çekip belleğine yükler.</p>
 
-      <h4 style="margin:1rem 0 .4rem">Adım 1 — External Threat Feed'leri tanımla (CLI)</h4>
+      <h4>Adım 1 — External Threat Feed (CLI)</h4>
 <pre><code>config system external-resource
     edit "SGB-Domain"
         set type domain
@@ -450,269 +192,113 @@ kubectl apply -k sgb-api-bridge/k8s/</code></pre>
         set status enable
     next
 end</code></pre>
-      <p>GUI'den eşdeğeri: <em>Security Fabric → External Connectors → Create New → Threat Feeds</em>
-        altında <strong>Domain Name</strong>, <strong>IP Address</strong> ve <strong>URL</strong> tiplerinde üç ayrı feed oluşturun.</p>
+      <p>GUI: <em>Security Fabric → External Connectors → Create New → Threat Feeds</em>.</p>
 
-      <h4 style="margin:1rem 0 .4rem">Adım 2 — Feed'in çekildiğini doğrula</h4>
+      <h4>Adım 2 — Doğrulama</h4>
 <pre><code>diagnose sys external-resource entry-list
 diagnose sys external-resource refresh SGB-Domain</code></pre>
-      <p>Çıktıda <code>last-update</code> taze ve <code>entries</code> ~450.000 görüyorsanız feed başarılı.</p>
 
-      <h4 style="margin:1rem 0 .4rem">Adım 3a — IP feed'i Firewall Policy'de kullan</h4>
-      <p><em>Policy &amp; Objects → Addresses → Create New → Address</em>:</p>
-      <ul>
-        <li>Type: <strong>External Block List (Threat Feed)</strong></li>
-        <li>External Block List: <code>SGB-IP</code></li>
-        <li>Name: <code>SGB-IP-Blocklist</code></li>
-      </ul>
-      <p>Sonra <em>Policy &amp; Objects → Firewall Policy</em> altında yeni bir kural ekleyin:
-        <strong>Source: all · Destination: SGB-IP-Blocklist · Action: DENY</strong>. Bu kuralı diğer
-        allow kurallarının <em>üstüne</em> yerleştirin ve log etkin bırakın.</p>
+      <h4>Adım 3a — IP feed → Firewall Policy</h4>
+      <p><em>Policy &amp; Objects → Addresses → Create New → Address</em>: Type=<strong>External Block List</strong>,
+        External Block List=<code>SGB-IP</code>, Name=<code>SGB-IP-Blocklist</code>. Sonra yeni bir
+        <em>Firewall Policy</em>: <strong>Destination=SGB-IP-Blocklist · Action=DENY</strong>, allow kurallarının üstüne.</p>
 
-      <h4 style="margin:1rem 0 .4rem">Adım 3b — Domain feed'i DNS Filter'da kullan</h4>
-      <p><em>Security Profiles → DNS Filter → Create New</em>:</p>
-      <ul>
-        <li>Domain Filter altında <em>Use External Domain Block Lists</em> → <code>SGB-Domain</code> seç</li>
-        <li>Action: <strong>Block</strong></li>
-      </ul>
-      <p>Bu DNS profilini ilgili firewall policy'sine (genelde <em>LAN → WAN</em>) inspect modunda bağlayın.
-        Böylece kullanıcı zararlı bir domain'i çözmeye çalıştığında FortiGate doğrudan DNS yanıtını bloklar.</p>
+      <h4>Adım 3b — Domain feed → DNS Filter</h4>
+      <p><em>Security Profiles → DNS Filter → Create New</em>: Domain Filter altında
+        <em>Use External Domain Block Lists</em> → <code>SGB-Domain</code> → Action=Block.
+        İlgili policy'ye inspect modunda bağlayın.</p>
 
-      <h4 style="margin:1rem 0 .4rem">Adım 3c — Domain feed'i Web Filter'da da kullan</h4>
-      <p>DNS Filter, istemci başka bir DNS sunucusuna (8.8.8.8, DoH/DoT vb.) gittiğinde devre dışı kalır.
-        Aynı domain listesini <strong>Web Filter</strong>'a da bağlayarak HTTP/HTTPS akışında ikinci bir
-        savunma katmanı kurabilirsiniz — istemci hangi DNS'i kullanırsa kullansın, host header / SNI
-        bu liste ile eşleşirse trafik kesilir.</p>
-      <p><em>Security Profiles → Web Filter → Create New</em> → <em>Static URL Filter</em> bölümünde
-        <em>Block invalid URLs</em>'in altında <em>URL Filter</em> tablosunu açın → <strong>Add</strong>:</p>
-      <ul>
-        <li>Type: <strong>Wildcard</strong> (veya yeni sürümlerde doğrudan <em>External Resource</em>)</li>
-        <li>Action: <strong>Block</strong></li>
-        <li>External Resource: <code>SGB-Domain</code></li>
-      </ul>
-      <p>CLI ile:</p>
-<pre><code>config webfilter profile
-    edit "SGB-WebFilter"
-        config web
-            set blacklist enable
-        end
-        config url-extraction
-            set status enable
-        end
-    next
-end
+      <h4>Adım 3c — Domain feed → Web Filter</h4>
+      <p>DNS Filter DoH/DoT'ta devre dışı; aynı domain'i Web Filter'a da bağlamak ikinci savunma katmanı.
+        <em>Security Profiles → Web Filter → Static URL Filter</em> → External Resource=<code>SGB-Domain</code>.</p>
 
-# External resource referansını web filter profili icinde bağla:
-config webfilter urlfilter
-    edit 1
-        set name "SGB-URL-Filter"
-        config entries
-            edit 1
-                set url "SGB-Domain"
-                set type wildcard
-                set action block
-                set status enable
-            next
-        end
-    next
-end</code></pre>
-      <p>Sonra bu Web Filter profilini ilgili firewall policy'sinde <code>set webfilter-profile "SGB-WebFilter"</code>
-        ile bağlayın ve aynı policy'ye SSL inspection profili atayın.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 3d — URL feed'i Web Filter'da kullan</h4>
-      <p>Aynı Web Filter profiline ikinci bir external resource olarak <code>SGB-URL</code> ekleyin.
-        Tam yol (path) bazlı URL'ler için SSL/SSH Inspection profilinin <em>deep-inspection</em>
-        olması gerekir; SNI bazlı yakalama için <em>certificate-inspection</em> de yeterli olabilir.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 4 — Loglarda doğrulama</h4>
-<pre><code># GUI: Log &amp; Report → Forward Traffic → Action = Deny filtresi
-# CLI:
+      <h4>Adım 4 — Loglarda doğrulama</h4>
+<pre><code># GUI: Log &amp; Report → Forward Traffic → Action=Deny filtresi
 diagnose debug flow filter daddr &lt;test-ip&gt;
 diagnose debug flow trace start 10
 diagnose debug enable</code></pre>
 
       <div class="callout">
-        <strong>İpucu:</strong> SSL deep-inspection olmadan HTTPS URL'leri yalnız SNI üzerinden yakalanır.
-        Tam yol (path) bazlı block için deep-inspection ve kurumsal CA dağıtımı gerekir.
-        Yalnız DNS + IP bloklaması bile pratikte zararlı erişimlerin büyük çoğunluğunu keser.
+        <strong>İpucu:</strong> SSL deep-inspection yokken HTTPS URL'leri SNI üzerinden yakalanır.
+        Tam yol için deep-inspection + kurumsal CA dağıtımı gerekir. Yalnız DNS+IP bile pratikte
+        çoğunluğu keser.
       </div>
-
     </div>
 
     <div class="tab-panel" id="tab-sophos">
-      <p>Sophos XG / SFOS, harici URL'den otomatik tazelenen <strong>FQDN host group</strong> ve
-        <strong>IP host group</strong> objeleri destekler. Bu objeleri bir
-        <em>Firewall Rule</em>'a destination olarak bağlayıp Drop edebilirsiniz.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 1 — IP host group (dinamik liste)</h4>
+      <p>Sophos XG/SFOS, harici URL'den otomatik tazelenen <strong>FQDN/IP Host Group</strong> objeleri destekler.</p>
+      <h4>1. IP host group</h4>
       <ol>
-        <li><em>System → Hosts and Services → IP Host Group</em> → <strong>Add</strong></li>
-        <li>Name: <code>SGB-IP</code></li>
-        <li>Type: <strong>IP List</strong> (URL'den)</li>
-        <li>URL: <code>https://bilsectr.github.io/sgb-api-bridge/ip-list.txt</code></li>
-        <li>IP Format: <em>IPv4</em> · Refresh interval: 60 dk</li>
-        <li><strong>Save</strong> → liste yüklendiğinde sağda satır sayısı görünür.</li>
+        <li><em>System → Hosts and Services → IP Host Group</em> → Add</li>
+        <li>Name: <code>SGB-IP</code> · Type: IP List (URL) · URL: <code>https://bilsectr.github.io/sgb-api-bridge/ip-list.txt</code></li>
+        <li>Refresh: 60 dk</li>
       </ol>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 2 — FQDN host group (domain listesi)</h4>
+      <h4>2. FQDN host group</h4>
       <ol>
-        <li><em>System → Hosts and Services → FQDN Host Group</em> → <strong>Add</strong></li>
-        <li>Name: <code>SGB-Domain</code></li>
-        <li>External list URL:
-            <code>https://bilsectr.github.io/sgb-api-bridge/domain-list.txt</code></li>
-        <li>Refresh interval: 60 dk</li>
+        <li>Name: <code>SGB-Domain</code> · External list URL: <code>.../domain-list.txt</code></li>
       </ol>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 3 — URL group (web filter için)</h4>
-      <ol>
-        <li><em>Web → URL Groups</em> → <strong>Add</strong></li>
-        <li>Name: <code>SGB-URL</code> · External URL DB:
-            <code>https://bilsectr.github.io/sgb-api-bridge/url-list.txt</code></li>
-        <li>Sonra <em>Web → Policies</em> altında bu grubu <strong>Block</strong> aksiyonu ile
-            kurumsal web policy'sine ekleyin.</li>
-      </ol>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 4 — Firewall Rule oluştur</h4>
-      <p><em>Rules and Policies → Firewall Rules → Add Firewall Rule → New Firewall Rule</em>:</p>
-      <ul>
-        <li>Rule name: <code>Block-SGB-Threats</code></li>
-        <li>Source zones: <strong>LAN</strong> · Source networks: <em>Any</em></li>
-        <li>Destination zones: <strong>WAN</strong></li>
-        <li>Destination networks: <code>SGB-IP</code>, <code>SGB-Domain</code> (her ikisini de seç)</li>
-        <li>Action: <strong>Drop</strong> · Log firewall traffic: <strong>On</strong></li>
-      </ul>
-      <p>Bu kuralı kural sıralamasında <em>Allow</em> kurallarının <strong>üstüne</strong> taşıyın.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 5 — Doğrulama</h4>
-      <ul>
-        <li><em>Monitor &amp; Analyze → Diagnostics → Tools → Name lookup</em> ile listeden bir test domain'i sorgulayın.</li>
-        <li><em>Reports → Traffic → Blocked</em> raporunda kural ismiyle hit görmelisiniz.</li>
-        <li>Host group sayfasındaki <em>last update</em> sütunu son tazeleme zamanını gösterir.</li>
-      </ul>
-
+      <h4>3. Firewall rule</h4>
+      <p>Source=LAN/Any · Destination=<code>SGB-IP, SGB-Domain</code> · Action=<strong>Drop</strong>. Allow kurallarının üstüne taşıyın.</p>
       <div class="callout">
-        <strong>İpucu:</strong> FQDN host group ~500K kayıt için bellek/CPU tüketebilir. Küçük modellerde
-        (XGS 87/107) domain listesini yalnızca <em>Web Policy</em> üzerinden (URL group) uygulayıp
-        Firewall Rule'da sadece IP listesini kullanmak daha sağlıklıdır.
+        <strong>İpucu:</strong> Küçük modellerde (XGS 87/107) ~500K FQDN host group bellek tüketir;
+        domain'i sadece Web Policy'de (URL group) uygulayın, Firewall Rule'da IP listesini kullanın.
       </div>
     </div>
 
     <div class="tab-panel" id="tab-paloalto">
-      <p>Palo Alto PAN-OS bu listeler için <strong>External Dynamic List (EDL)</strong> özelliğini sunar —
-        IP, Domain ve URL tipinde üç ayrı EDL tanımlayıp Security/URL Filter politikalarında
-        kullanırsınız. Cihaz her <em>recurring</em> aralığında kendi başına URL'yi çekip günceller.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 1 — EDL objelerini oluştur (CLI)</h4>
+      <p>Palo Alto PAN-OS <strong>External Dynamic List (EDL)</strong> ile IP/Domain/URL feed tipi destekler.</p>
+      <h4>1. EDL oluştur (CLI)</h4>
 <pre><code>configure
-
 set external-list SGB-IP type ip url \
-    https://bilsectr.github.io/sgb-api-bridge/ip-list.txt \
-    recurring hourly
-
+    https://bilsectr.github.io/sgb-api-bridge/ip-list.txt recurring hourly
 set external-list SGB-Domain type domain url \
-    https://bilsectr.github.io/sgb-api-bridge/domain-list.txt \
-    recurring hourly
-
+    https://bilsectr.github.io/sgb-api-bridge/domain-list.txt recurring hourly
 set external-list SGB-URL type url url \
-    https://bilsectr.github.io/sgb-api-bridge/url-list.txt \
-    recurring hourly
-
+    https://bilsectr.github.io/sgb-api-bridge/url-list.txt recurring hourly
 commit</code></pre>
-      <p>GUI'den eşdeğeri: <em>Objects → External Dynamic Lists → Add</em>. Her biri için:
-        Type, Source (URL), Check for updates: <strong>Hourly</strong>.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 2 — EDL'in çekildiğini doğrula</h4>
+      <h4>2. Doğrula</h4>
 <pre><code>request system external-list refresh type ip name SGB-IP
-request system external-list show type ip name SGB-IP
-# Çıktıda 'Total valid entries' ~14000, 'Last refresh' taze olmalı.</code></pre>
-      <p>GUI: <em>Objects → External Dynamic Lists</em> → ilgili EDL'e tıkla → <strong>List Capacities</strong>
-        ve <strong>Test Source URL</strong> butonları.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 3a — IP EDL'i Security Policy'de kullan</h4>
-      <p><em>Policies → Security → Add</em>:</p>
-      <ul>
-        <li>Name: <code>Block-SGB-IP</code></li>
-        <li>Source Zone: <strong>trust</strong> · Source: <em>any</em></li>
-        <li>Destination Zone: <strong>untrust</strong> · Destination Address: <code>SGB-IP</code></li>
-        <li>Application: <em>any</em> · Service: <em>application-default</em></li>
-        <li>Action: <strong>Deny</strong> · Log at session end: ✓</li>
-      </ul>
-      <p>Bu kuralı diğer izin kurallarının <strong>üstüne</strong> taşıyın.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 3b — Domain EDL'i Anti-Spyware (DNS Sinkhole) profilinde kullan</h4>
-      <p><em>Objects → Security Profiles → Anti-Spyware → Add → DNS Policies</em>:</p>
-      <ul>
-        <li>DNS Security veya External Dynamic Lists sekmesinde <code>SGB-Domain</code>'i ekle</li>
-        <li>Policy Action: <strong>sinkhole</strong> · Packet Capture: <em>single-packet</em></li>
-        <li>Sinkhole IPv4: <code>72.5.65.111</code> (Palo Alto varsayılan) veya kurumsal sinkhole adresiniz</li>
-      </ul>
-      <p>Bu Anti-Spyware profilini Security Policy'lerinizdeki <em>Profile Settings</em> içinde
-        Security Profile Group veya doğrudan profile olarak bağlayın.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 3c — URL EDL'i URL Filtering profilinde kullan</h4>
-      <p><em>Objects → Security Profiles → URL Filtering → Add</em>:</p>
-      <ul>
-        <li>Categories sekmesinde aşağıda EDL listesi görünür: <code>SGB-URL</code> → Site Access:
-            <strong>block</strong>, User Credential Submission: <strong>block</strong></li>
-      </ul>
-      <p>Bu URL Filtering profilini ilgili outbound Security kuralının <em>Actions → Profile Setting</em>
-        bölümüne ekleyin. HTTPS için bir <em>Decryption</em> policy'si (SSL Forward Proxy) varsa
-        tam URL bazlı; yoksa SNI bazlı block çalışır.</p>
-
-      <h4 style="margin:1rem 0 .4rem">Adım 4 — Commit ve log doğrulama</h4>
-<pre><code>commit description "SGB threat feeds wired into security + url-filter + anti-spyware"</code></pre>
-      <ul>
-        <li><em>Monitor → Logs → Traffic</em> → Filter: <code>(action eq deny) and (rule eq Block-SGB-IP)</code></li>
-        <li><em>Monitor → Logs → Threat</em> → Sinkhole/URL Filtering log'ları</li>
-        <li><em>Monitor → Logs → URL Filtering</em> → Block kayıtları</li>
-      </ul>
-
-      <div class="callout">
-        <strong>İpucu:</strong> PAN-OS'ta EDL kapasiteleri model bazlıdır (PA-220 düşük, PA-3200+ yüksek).
-        <code>request system external-list show type ip name SGB-IP</code> ile model kapasitesinin altında
-        olduğunuzu doğrulayın; aşılırsa fazla satır <em>silent</em> drop edilir.
-      </div>
-
+request system external-list show  type ip name SGB-IP</code></pre>
+      <h4>3a. IP EDL → Security Policy</h4>
+      <p>Destination=<code>SGB-IP</code> · Action=Deny · Log at session end. Allow kurallarının üstüne.</p>
+      <h4>3b. Domain EDL → Anti-Spyware (DNS Sinkhole)</h4>
+      <p><em>Anti-Spyware Profile → DNS Policies</em> → External Dynamic Lists → <code>SGB-Domain</code> → Action=sinkhole.</p>
+      <h4>3c. URL EDL → URL Filtering</h4>
+      <p><em>URL Filtering Profile → Categories</em> → <code>SGB-URL</code> → Site Access=block, Credential Submission=block.</p>
       <div class="callout warn">
-        <strong>Authentication:</strong> EDL'iniz private (GitLab/Docker) ve URL HTTPS basic auth ile
-        korunuyorsa <em>Client Authentication</em> alanına kimlik bilgilerini ve gerekirse
-        <em>Certificate Profile</em> tanımlayın. Public GitHub Pages için ek bir şey gerekmez.
+        <strong>Auth:</strong> Private mirror kullanıyorsanız Client Authentication + Certificate Profile gerekir.
+        Public GitHub Pages için ek yok.
       </div>
     </div>
 
     <div class="tab-panel" id="tab-pfsense">
-      <p>pfSense + pfBlockerNG paketi:</p>
+      <p>pfSense + pfBlockerNG:</p>
       <ol>
-        <li><strong>Firewall → pfBlockerNG → IPv4</strong> → <em>Add</em> → State: ON · Format: auto ·
-            URL: <code>https://bilsectr.github.io/sgb-api-bridge/ip-list.txt</code> · Action: Deny Both</li>
-        <li><strong>DNSBL → DNSBL Groups</strong> → <em>Add</em> → URL:
-            <code>https://bilsectr.github.io/sgb-api-bridge/domain-list.txt</code> · Format: auto</li>
-        <li><strong>Update</strong> sekmesinde "Force Reload" → IP &amp; DNSBL.</li>
+        <li><em>Firewall → pfBlockerNG → IPv4</em> → Add → URL=<code>.../ip-list.txt</code> · Action=Deny Both</li>
+        <li><em>DNSBL → DNSBL Groups</em> → Add → URL=<code>.../domain-list.txt</code></li>
+        <li><em>Update</em> sekmesinde Force Reload</li>
       </ol>
     </div>
 
     <div class="tab-panel" id="tab-pihole">
-      <p>Pi-hole Adlists olarak ekleyin:</p>
 <pre><code># Web UI: Group Management → Adlists → Add
 https://bilsectr.github.io/sgb-api-bridge/domain-list.txt
 
-# Sonra gravity'yi tazele:
+# Sonra gravity tazele:
 pihole -g</code></pre>
     </div>
 
     <div class="tab-panel" id="tab-squid">
-      <p>Squid proxy'de saatlik cron + ACL:</p>
 <pre><code># /etc/squid/squid.conf
 acl sgb_blacklist dstdomain "/etc/squid/sgb-domain-list.txt"
 http_access deny sgb_blacklist
 
-# crontab -e
+# crontab -e (saatlik)
 17 * * * * curl -sf https://bilsectr.github.io/sgb-api-bridge/domain-list.txt \
   -o /etc/squid/sgb-domain-list.txt && systemctl reload squid</code></pre>
     </div>
 
     <div class="tab-panel" id="tab-mikrotik">
-      <p>MikroTik RouterOS 7+ için <code>/ip/firewall/address-list</code> import scripti:</p>
 <pre><code>/system script add name=sgb-sync source={
   /tool fetch url="https://bilsectr.github.io/sgb-api-bridge/ip-list.txt" \
     mode=https dst-path=sgb-ip.txt
@@ -724,118 +310,220 @@ http_access deny sgb_blacklist
     }
   }
 }
-
 /system scheduler add name=sgb-hourly interval=1h on-event=sgb-sync</code></pre>
-      <p>Sonra <code>/ip firewall filter</code>'da <code>src-address-list=SGB</code> /
-        <code>dst-address-list=SGB</code> ile drop kuralı ekleyin.</p>
+      <p>Sonra <code>/ip firewall filter</code>'da <code>dst-address-list=SGB</code> ile drop kuralı.</p>
     </div>
   </section>
 
+  <!-- =================== SIEM =================== -->
   <section id="siem">
-    <h2>SIEM Pack <span class="hash" style="font-size:.7em">— QRadar · Splunk · STIX 2.1</span></h2>
+    <h2>🔍 SIEM / İzleme — korelasyon + alarm + use case <span class="hash">#siem</span></h2>
     <p class="section-sub">
-      SGB indicator'larini sadece firewall'da bloklamak istemiyor, SIEM'inizde
-      <strong>kural yazmak, alarm uretmek, rapor cikarmak</strong> istiyorsaniz: ayni feed'in
-      zenginlestirilmis hali — <code>connectiontype</code>, <code>description</code>,
-      <code>criticality_level</code>, <code>source</code> alanlariyla — QRadar Reference Set/Map,
-      Splunk Lookup TA ve vendor-agnostik STIX 2.1 bundle olarak hazirdir.
+      Aynı SGB indicator'larını <code>connectiontype</code>, <code>description</code>,
+      <code>criticality_level</code>, <code>source</code> alanlarıyla zenginleştirilmiş halde
+      SIEM/TIP ortamınıza akıtır; rule yazıp alarm üretmeyi kolaylaştırır. Saatlik rolling
+      release ile her zaman taze veri.
     </p>
 
-    <div class="deploy-grid">
-      <div class="deploy">
+    <div class="grid cards">
+      <a class="card" href="view.html?file=integrations/qradar.md">
         <div class="icon">🛡️</div>
         <span class="pill">Reference Set + Map</span>
         <h3>IBM QRadar</h3>
-        <p>10 reference set + 5 reference map otomatik uretilir, REST API ile push edilir.
-          3 baslangic rule + AQL test paketi + gunluk rapor.</p>
-        <a href="integrations/qradar.md">Kurulum (15 dk) →</a>
-      </div>
-      <div class="deploy">
+        <p>8+ reference set + 5 map, REST API ile idempotent push. 3 başlangıç rule + AQL test paketi.</p>
+        <span class="more">15 dk kurulum →</span>
+      </a>
+      <a class="card" href="view.html?file=integrations/splunk.md">
         <div class="icon">🔎</div>
         <span class="pill">TA paketi</span>
         <h3>Splunk</h3>
-        <p><code>TA-sgb-threatintel.tar.gz</code>: 3 lookup, otomatik enrichment,
-          3 saved search + overview dashboard. Restart-suz lookup refresh.</p>
-        <a href="integrations/splunk.md">Kurulum (10 dk) →</a>
-      </div>
-      <div class="deploy">
+        <p>TA-sgb-threatintel.tar.gz: 3 lookup, otomatik enrichment, 3 saved search + overview dashboard.</p>
+        <span class="more">10 dk kurulum →</span>
+      </a>
+      <a class="card" href="view.html?file=integrations/misp.md">
         <div class="icon">🧬</div>
-        <span class="pill">STIX 2.1 standard</span>
-        <h3>MISP / OpenCTI / Sentinel</h3>
-        <p>Per-type STIX 2.1 bundle: identity + indicator + deterministik UUID +
-          source-bazli confidence + zengin <code>x_sgb_*</code> alanlari.</p>
-        <a href="integrations/README.md">Tum entegrasyonlar →</a>
-      </div>
-      <div class="deploy">
-        <div class="icon">📚</div>
-        <span class="pill">20 use case</span>
-        <h3>Use Case kutuphanesi</h3>
-        <p>PH/BC/AC/EK/MF/MM/MC/OT + cross-category. Her use case vendor-agnostik
-          tanim + QRadar/Splunk implementasyon pointer'i + MITRE mapping + FP notlari.</p>
-        <a href="usecases/">Kutuphaneye git →</a>
-      </div>
+        <span class="pill">STIX 2.1 Feed</span>
+        <h3>MISP</h3>
+        <p>Per-type STIX 2.1 bundle; deterministik UUID; PyMISP air-gapped alternatifi.</p>
+        <span class="more">10 dk kurulum →</span>
+      </a>
+      <a class="card" href="view.html?file=integrations/opencti.md">
+        <div class="icon">🕸️</div>
+        <span class="pill">External Import</span>
+        <h3>OpenCTI</h3>
+        <p>Resmi external-import connector + custom Python connector iskeleti + identity/confidence map.</p>
+        <span class="more">15 dk kurulum →</span>
+      </a>
+      <a class="card" href="view.html?file=integrations/sentinel.md">
+        <div class="icon">☁️</div>
+        <span class="pill">Logic App</span>
+        <h3>Microsoft Sentinel</h3>
+        <p>STIX → TI Upload API; analytics rule önerileri; KQL externaldata fallback.</p>
+        <span class="more">20 dk kurulum →</span>
+      </a>
+      <a class="card" href="view.html?file=integrations/generic-stix.md">
+        <div class="icon">🧩</div>
+        <span class="pill">Falcon · XDR · XSOAR · Elastic · Wazuh · Suricata</span>
+        <h3>Generic STIX / CSV</h3>
+        <p>CrowdStrike Falcon, Defender XDR, Cortex XSOAR, Elastic, Wazuh, Suricata pattern'ları.</p>
+        <span class="more">Hedef sistem matrisi →</span>
+      </a>
     </div>
 
-    <h3 style="margin-top:1.6rem">Kurulum hizi</h3>
-<pre><code># Tek sefer: SQLite'i doldur (~10-15 dk)
+    <h3 style="margin-top:1.8rem">Use Case kütüphanesi</h3>
+    <a class="card" href="usecases/" style="margin-top:.6rem">
+      <div class="icon">📚</div>
+      <span class="pill">20 vendor-agnostik use case</span>
+      <h3>PH · BC · AC · EK · MF · MM · MC · OT + cross-category</h3>
+      <p>Her use case: MITRE mapping + data sources + detection logic + QRadar/Splunk implementasyon
+        pointer + severity formülü + false positive notları. Yeni use case eklemek için tek şablon.</p>
+      <span class="more">Kütüphaneye git →</span>
+    </a>
+
+    <h3 style="margin-top:1.8rem">Hızlı kurulum</h3>
+<pre><code># Tek sefer: SQLite'ı doldur (~10-15 dk)
 python scripts/sync.py --mode catalog-sync
 python scripts/sync.py --mode full
 
-# Artifact'lari uret
+# Artifact'ları üret
 python scripts/export.py              # feeds/ - master CSV + JSONL + STIX
 python scripts/build_pack.py          # QRadar reference set/map CSV'leri
-python scripts/build_splunk_ta.py     # Splunk TA tarball'i
+python scripts/build_splunk_ta.py     # Splunk TA tarball'ı
 
-# Push (QRadar)
+# Push (QRadar) — opsiyonel
 export SGB_QRADAR_HOST=qradar.kurum.local SGB_QRADAR_TOKEN=...
 python scripts/push_to_qradar.py --pack siem/qradar/out
 
 # Install (Splunk)
 $SPLUNK_HOME/bin/splunk install app siem/splunk/out/TA-sgb-threatintel.tar.gz</code></pre>
 
+    <h3 style="margin-top:1.8rem">Sürekli erişilebilir SIEM Pack URL'leri</h3>
+    <p class="section-sub">
+      <strong>Rolling</strong> kanalı her saatlik delta sonrası yeniden üretilir, URL'ler ayni
+      kalır — Sentinel Logic App, MISP Feed, OpenCTI connector ve diğer pipeline'larda doğrudan
+      kullanılabilir:
+    </p>
+<pre><code># Saatlik tazelenen (SIEM ingest icin)
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/sgb-feeds.tar.gz
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/sgb-qradar-pack.tar.gz
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/TA-sgb-threatintel.tar.gz
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/sgb-domain.stix2.json
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/sgb-ip.stix2.json
+https://github.com/bilsectr/sgb-api-bridge/releases/download/feeds-latest/SHA256SUMS
+
+# Stabil snapshot (versiyon audit gerektigi durumlar)
+https://github.com/bilsectr/sgb-api-bridge/releases/latest/download/sgb-feeds.tar.gz</code></pre>
+
     <div class="callout">
-      <strong>Severity matrisi:</strong> Her iki SIEM aynı formülü kullanır —
-      <code>connectiontype × criticality_level</code> → 1-10 severity. APT C&amp;C eslesmesi
-      her zaman 10 (P1), Mining eslesmesi 3 (policy). Tek kaynak:
+      <strong>Severity matrisi:</strong> QRadar ve Splunk aynı formülü kullanır —
+      <code>connectiontype × criticality_level</code> → 1-10 severity. APT C&amp;C eşleşmesi
+      her zaman 10 (P1), Mining 3 (policy). Tek kaynak:
       <a href="https://github.com/bilsectr/sgb-api-bridge/blob/main/siem/qradar/severity-matrix.md" target="_blank" rel="noopener">severity-matrix.md</a>.
     </div>
   </section>
 
+  <!-- =================== KURULUM SECENEKLERI =================== -->
+  <section id="deploy">
+    <h2>Dağıtım seçenekleri <span class="hash">#deploy</span></h2>
+    <p class="section-sub">
+      Projeyi kullanmanın <strong>dört farklı yolu</strong> vardır. İhtiyacınıza göre seçin —
+      hepsi aynı çıktıyı üretir, sadece kim host eder ve nereden servis edilir farkı vardır.
+    </p>
+
+    <div class="grid cards">
+      <a class="card" href="https://github.com/bilsectr/sgb-api-bridge/blob/main/docs/setup-github.md" target="_blank" rel="noopener">
+        <div class="icon">☁️</div>
+        <span class="pill">Önerilen · Sıfır kurulum</span>
+        <h3>1) GitHub Pages</h3>
+        <p>Bu sayfa zaten bu modelde. URL'leri firewall'a verin. Fork edebilirsiniz.</p>
+        <span class="more">Kurulum rehberi →</span>
+      </a>
+      <a class="card" href="https://github.com/bilsectr/sgb-api-bridge/blob/main/docs/setup-gitlab.md" target="_blank" rel="noopener">
+        <div class="icon">🏢</div>
+        <span class="pill warn">Air-gapped</span>
+        <h3>2) Self-hosted GitLab</h3>
+        <p>İnternet erişimi yok ortamlar için: scheduled pipeline + dahili Pages.</p>
+        <span class="more">Kurulum rehberi →</span>
+      </a>
+      <a class="card" href="https://github.com/bilsectr/sgb-api-bridge/blob/main/docs/setup-docker.md" target="_blank" rel="noopener">
+        <div class="icon">🐳</div>
+        <span class="pill">İndir-çalıştır-unut</span>
+        <h3>3) Docker</h3>
+        <p>Tek konteyner: nginx + sync + SIEM pack rebuild. <code>/feeds/</code>, <code>/siem/</code> serve eder.</p>
+        <span class="more">Kurulum rehberi →</span>
+      </a>
+      <a class="card" href="https://github.com/bilsectr/sgb-api-bridge/blob/main/docs/setup-k8s.md" target="_blank" rel="noopener">
+        <div class="icon">⎈</div>
+        <span class="pill">Kurumsal</span>
+        <h3>4) Kubernetes</h3>
+        <p>CronJob + Deployment + Service + PVC. Helm/kustomize ile mevcut cluster'a entegre.</p>
+        <span class="more">Kurulum rehberi →</span>
+      </a>
+    </div>
+
+    <h3 style="margin-top:1.4rem">Docker — hızlı başlangıç (firewall feed + SIEM pack birlikte)</h3>
+<pre><code>docker run -d \
+  --name sgb-api-bridge \
+  -p 8080:80 \
+  -v sgb-api-bridge-data:/data \
+  --restart unless-stopped \
+  ghcr.io/bilsectr/sgb-api-bridge:latest
+
+# Endpoint'ler:
+#   http://&lt;sunucu&gt;:8080/domain-list.txt                          (firewall icin)
+#   http://&lt;sunucu&gt;:8080/feeds/sgb-master.csv                      (SIEM master)
+#   http://&lt;sunucu&gt;:8080/feeds/stix/sgb-domain.stix2.json          (STIX bundle)
+#   http://&lt;sunucu&gt;:8080/siem/splunk/out/TA-sgb-threatintel.tar.gz (Splunk TA)
+#   http://&lt;sunucu&gt;:8080/siem/qradar/out/manifest.json             (QRadar pack)</code></pre>
+  </section>
+
+  <!-- =================== NASIL CALISIR =================== -->
   <section id="how">
-    <h2>Nasıl çalışır?</h2>
-    <p class="section-sub">İki tür senkron mekanizması var; sürekli çalışan yalnızca delta'dır.</p>
+    <h2>Nasıl çalışır? <span class="hash">#how</span></h2>
+    <p class="section-sub">İki tür senkron mekanizması + SIEM pack rebuild döngüsü.</p>
 
     <table>
-      <thead><tr><th>Mekanizma</th><th>Sıklık</th><th>Süre</th><th>Açıklama</th></tr></thead>
+      <thead><tr><th>Mekanizma</th><th>Sıklık</th><th>Süre</th><th>Üretir</th></tr></thead>
       <tbody>
         <tr>
           <td><strong>Delta sync</strong></td>
           <td>Saatte 1, otomatik</td>
-          <td>~1–3 dk</td>
-          <td>SGB API'den her tür için yalnız <em>yeni</em> kayıtları çeker. Sürekli çalışan tek mekanizma budur.</td>
+          <td>~1-3 dk</td>
+          <td>Yeni kayıtları SQLite'a + <code>docs/*-list.txt</code>'e ekler</td>
+        </tr>
+        <tr>
+          <td><strong>SIEM Pack rebuild</strong></td>
+          <td>Her delta sonrası</td>
+          <td>~30 sn</td>
+          <td><code>feeds/</code> (CSV + JSONL + STIX) + QRadar pack + Splunk TA</td>
+        </tr>
+        <tr>
+          <td><strong>Rolling release</strong></td>
+          <td>Her delta sonrası</td>
+          <td>~1 dk</td>
+          <td>GitHub <code>feeds-latest</code> tag'i yeniden oluşturulur</td>
         </tr>
         <tr>
           <td><strong>Full sync</strong></td>
           <td>Yalnız ilk kurulum (elle)</td>
-          <td>~10–15+ sa</td>
-          <td>Sıfırdan tam re-sync. Geçmiş veri zaten repo'da geldiği için <em>fork edenler için gerekmez.</em></td>
+          <td>~10-15 dk</td>
+          <td>Sıfırdan tam re-sync; fork edenler için <em>gerekli değil</em></td>
         </tr>
       </tbody>
     </table>
 
     <div class="callout">
-      <strong>Geçmiş veri zaten repo'da.</strong> Bu repo'yu klonlayan / fork eden herkes
-      <code>docs/*-list.txt</code> ve <code>state/seen_ids.json</code> dosyalarını <em>dolu</em> alır.
-      Delta sync bu noktadan devam eder — kendi ortamınızda full sync çalıştırmanız <strong>gerekmez</strong>.
-      Docker imajı da bu veriyi içinde gömülü taşır (haftalık tazelenir).
+      <strong>Geçmiş veri zaten repo'da.</strong> Repo'yu klonlayan/fork eden herkes
+      <code>docs/*-list.txt</code> + <code>state/seen_ids.json</code> + <code>state/sgb.db</code>
+      dosyalarını dolu alır. Delta sync buradan devam eder.
     </div>
 
     <h3>Mimari</h3>
     <ul>
-      <li>GitHub Actions <em>(Sync delta, hourly)</em> → <code>scripts/sync.py --mode delta</code></li>
-      <li>SGB API: <a href="https://siberguvenlik.gov.tr/api/address/index" target="_blank" rel="noopener">siberguvenlik.gov.tr/api/address/index</a> (newest-first, monoton artan ID)</li>
-      <li>Çıktı: <code>docs/</code> altına düz metin dosyalar → GitHub Pages → Fastly CDN</li>
-      <li>State: <code>state/seen_ids.json</code> içinde her tür için <code>max_id</code> tutulur</li>
+      <li>GitHub Actions <em>(Sync delta, hourly)</em> → <code>sync.py</code> → SQLite + txt feed</li>
+      <li>SGB API: <a href="https://siberguvenlik.gov.tr/api/address/index" target="_blank" rel="noopener">siberguvenlik.gov.tr/api/address/index</a> (newest-first, monoton ID)</li>
+      <li>Aynı pipeline: <code>export.py</code> + <code>build_pack.py</code> + <code>build_splunk_ta.py</code> → <code>feeds/</code> + <code>siem/*/out/</code></li>
+      <li>Yayın: GitHub Pages (txt feed) + GitHub Release <code>feeds-latest</code> (SIEM pack) + Docker imajı</li>
     </ul>
 
     <h3>CLI ile lokal çalıştırma</h3>
@@ -845,7 +533,10 @@ pip install requests
 
 python scripts/sync.py --mode delta    # ~1-3 dk, repo'daki veriden devam eder
 python scripts/sync.py --mode loop     # docker icin: delta'yi surekli tetikler
-python scripts/sync.py --mode full     # SADECE sifirdan tam re-sync gerekirse</code></pre>
+python scripts/sync.py --mode full     # SADECE sifirdan tam re-sync gerekirse
+python scripts/export.py               # feeds/ artifact'lari uret
+python scripts/build_pack.py           # QRadar pack
+python scripts/build_splunk_ta.py      # Splunk TA</code></pre>
   </section>
 
   <section>
@@ -854,7 +545,7 @@ python scripts/sync.py --mode full     # SADECE sifirdan tam re-sync gerekirse</
       Bu proje <strong>Siber Güvenlik Başkanlığı ile resmi bir bağlantısı olmayan</strong>,
       kâr amacı gütmeyen, açık kaynak bir araçtır. Üretim sistemlerinde "as-is" kullanılır;
       veri doğruluğundan SGB sorumludur. Kaynak kod
-      <a href="https://github.com/bilsectr/sgb-api-bridge/blob/main/LICENSE" target="_blank" rel="noopener">MIT lisansı</a> altında dağıtılır.
+      <a href="https://github.com/bilsectr/sgb-api-bridge/blob/main/LICENSE" target="_blank" rel="noopener">MIT lisansı</a> altında.
     </p>
   </section>
 
@@ -868,11 +559,11 @@ python scripts/sync.py --mode full     # SADECE sifirdan tam re-sync gerekirse</
     </div>
     <div class="links">
       <a href="https://www.linkedin.com/in/sinansh/" target="_blank" rel="noopener" title="LinkedIn">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3A2 2 0 0 1 21 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.34 18.34V10.6H5.67v7.74h2.67zM7 9.43a1.55 1.55 0 1 0 0-3.1 1.55 1.55 0 0 0 0 3.1zm11.34 8.91v-4.24c0-2.27-1.21-3.33-2.83-3.33-1.31 0-1.9.72-2.23 1.23v-1.4h-2.67c.04.75 0 7.74 0 7.74h2.67v-4.32c0-.24.02-.48.09-.65.19-.48.63-.98 1.36-.98.96 0 1.34.73 1.34 1.8v4.15h2.67z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3A2 2 0 0 1 21 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.34 18.34V10.6H5.67v7.74h2.67zM7 9.43a1.55 1.55 0 1 0 0-3.1 1.55 1.55 0 0 0 0 3.1zm11.34 8.91v-4.24c0-2.27-1.21-3.33-2.83-3.33-1.31 0-1.9.72-2.23 1.23v-1.4h-2.67c.04.75 0 7.74 0 7.74h2.67v-4.32c0-.24.02-.48.09-.65.19-.48.63-.98 1.36-.98.96 0 1.34.73 1.34 1.8v4.15h2.67z"/></svg>
         LinkedIn
       </a>
       <a href="https://github.com/sinansh/" target="_blank" rel="noopener" title="GitHub">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.58.11.79-.25.79-.55v-2.1c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.83 1.18 3.09 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.14v3.17c0 .3.21.67.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.93.58.11.79-.25.79-.55v-2.1c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.83 1.18 3.09 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.14v3.17c0 .3.21.67.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
         GitHub
       </a>
     </div>
@@ -880,12 +571,11 @@ python scripts/sync.py --mode full     # SADECE sifirdan tam re-sync gerekirse</
 </footer>
 
 <script>
-  // Theme toggle (persisted in localStorage, defaults to OS preference)
-  (function() {
+  // Theme toggle
+  (function () {
     const root = document.documentElement;
     const saved = localStorage.getItem('theme');
     if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved);
-
     document.getElementById('theme-toggle').addEventListener('click', () => {
       const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
       const current = root.getAttribute('data-theme') || (prefersLight ? 'light' : 'dark');
@@ -900,9 +590,7 @@ python scripts/sync.py --mode full     # SADECE sifirdan tam re-sync gerekirse</
     btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.tab-panel').forEach(p => {
-        p.classList.toggle('active', p.id === 'tab-' + tab);
-      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
     });
   });
 
