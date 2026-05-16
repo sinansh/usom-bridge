@@ -1,0 +1,17 @@
+-- SGB Daily Summary Report
+-- Son 24 saatte SGB indicator eslesmelerinin connectiontype kirilimli ozeti.
+-- Schedule: daily 06:00, distribution: SOC team + manager.
+
+SELECT
+    DATEFORMAT(starttime, 'yyyy-MM-dd HH') AS hour,
+    -- Map'ten CT cikar (value formati: "CT|DESC|CRIT|SRC")
+    STRSPLIT(REFERENCEMAP('SGB_IP_MAP', destinationip), '|', 0) AS connectiontype,
+    STRSPLIT(REFERENCEMAP('SGB_IP_MAP', destinationip), '|', 3) AS source_quality,
+    COUNT(*) AS event_count,
+    UNIQUECOUNT(sourceip) AS unique_internal_hosts,
+    UNIQUECOUNT(destinationip) AS unique_indicators_hit
+FROM events
+WHERE REFERENCEMAP('SGB_IP_MAP', destinationip) IS NOT NULL
+  AND starttime > NOW() - INTERVAL '24' HOUR
+GROUP BY hour, connectiontype, source_quality
+ORDER BY hour DESC, event_count DESC
