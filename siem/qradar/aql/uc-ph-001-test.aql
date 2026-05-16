@@ -1,0 +1,19 @@
+-- UC-PH-001 test: son 24 saat icinde SGB_PH_DOMAIN ile eslesen DNS sorgulari.
+-- Custom property "DNS Query" log source'a gore degisebilir (Infoblox: 'Question Name',
+-- Windows DNS: 'Query Name'). Bu rapor 'URL' field'ina dusen DNS payload'ini varsayar.
+
+SELECT
+    QIDNAME(qid) AS event_name,
+    sourceip,
+    sourceaddress,
+    "URL" AS dns_query,
+    REFERENCESETCONTAINS('SGB_PH_DOMAIN', "URL") AS is_sgb_phishing,
+    REFERENCEMAP('SGB_DOMAIN_MAP', "URL") AS sgb_enrichment,
+    COUNT(*) AS hits
+FROM events
+WHERE LOGSOURCETYPENAME(devicetype) ILIKE '%DNS%'
+  AND REFERENCESETCONTAINS('SGB_PH_DOMAIN', "URL") = TRUE
+  AND starttime > NOW() - INTERVAL '24' HOUR
+GROUP BY event_name, sourceip, sourceaddress, "URL", sgb_enrichment
+ORDER BY hits DESC
+LIMIT 500

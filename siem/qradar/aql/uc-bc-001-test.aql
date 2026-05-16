@@ -1,0 +1,15 @@
+-- UC-BC-001 test: son 24 saat icinde SGB_BC_IP ile eslesen outbound bagantilar.
+
+SELECT
+    QIDNAME(qid) AS event_name,
+    sourceip,
+    destinationip,
+    REFERENCEMAP('SGB_IP_MAP', destinationip) AS sgb_enrichment,
+    SUM("Source Bytes" + "Destination Bytes") AS total_bytes,
+    COUNT(*) AS connections
+FROM events
+WHERE REFERENCESETCONTAINS('SGB_BC_IP', destinationip) = TRUE
+  AND starttime > NOW() - INTERVAL '24' HOUR
+GROUP BY event_name, sourceip, destinationip, sgb_enrichment
+ORDER BY connections DESC
+LIMIT 500
