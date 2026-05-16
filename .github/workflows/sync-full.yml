@@ -40,6 +40,41 @@ jobs:
             git commit -m "Full sync $(date -u +%Y-%m-%dT%H:%MZ)"
             git push
           fi
+
+      # --- SIEM Pack artifact build (S7) ---
+      - name: Build SIEM artifacts
+        if: success()
+        run: |
+          python scripts/export.py
+          python scripts/build_pack.py
+          python scripts/build_splunk_ta.py
+
+      - name: Upload feeds artifact
+        if: success() && hashFiles('feeds/index.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sgb-feeds-full-${{ github.run_number }}
+          path: feeds/
+          retention-days: 90
+
+      - name: Upload QRadar pack
+        if: success() && hashFiles('siem/qradar/out/manifest.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sgb-qradar-pack-full-${{ github.run_number }}
+          path: siem/qradar/out/
+          retention-days: 90
+
+      - name: Upload Splunk TA
+        if: success() && hashFiles('siem/splunk/out/TA-sgb-threatintel.tar.gz') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sgb-splunk-ta-full-${{ github.run_number }}
+          path: |
+            siem/splunk/out/TA-sgb-threatintel.tar.gz
+            siem/splunk/out/manifest.json
+          retention-days: 90
+
       - name: Re-trigger if incomplete
         if: success()
         env:

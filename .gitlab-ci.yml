@@ -12,7 +12,9 @@
 
 stages:
   - sync
+  - pack    # SIEM Pack artifact build (feeds/, qradar pack, splunk TA)
   - publish
+  - release # tag bazli GitLab Release
 
 variables:
   GIT_STRATEGY: clone
@@ -101,6 +103,107 @@ sync:full:
     paths: [.cache/pip]
   timeout: 6h
   resource_group: sgb-sync
+
+# ---- SIEM Pack build (S7) ----
+# Her sync sonrasi (delta/full bittikten sonra) ayni pipeline icinde
+# feeds/, siem/qradar/out/, siem/splunk/out/ uretilir ve GitLab artifact
+# olarak indirilebilir hale gelir. Commit edilmez (.gitignore).
+
+.pack_base: &pack_base
+  stage: pack
+  image: python:3.11-slim
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git
+    - pip install -q --cache-dir "$PIP_CACHE_DIR" requests
+  script:
+    - |
+      if [ ! -f state/sgb.db ]; then
+        echo "state/sgb.db yok - sync once calismadi, pack skip"
+        exit 0
+      fi
+    - python scripts/export.py
+    - python scripts/build_pack.py
+    - python scripts/build_splunk_ta.py
+  cache:
+    key: pip
+    paths: [.cache/pip]
+  artifacts:
+    name: "sgb-siem-pack-${CI_PIPELINE_ID}"
+    paths:
+      - feeds/
+      - siem/qradar/out/
+      - siem/splunk/out/
+    expire_in: 30 days
+    when: always
+
+pack:delta:
+  <<: *pack_base
+  needs: ["sync:delta"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $SYNC_MODE == "delta"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $SYNC_MODE == "delta"'
+
+pack:full:
+  <<: *pack_base
+  needs: ["sync:full"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $SYNC_MODE == "full"'
+  artifacts:
+    name: "sgb-siem-pack-full-${CI_PIPELINE_ID}"
+    paths: [feeds/, siem/qradar/out/, siem/splunk/out/]
+    expire_in: 90 days
+    when: always
+
+# ---- Tag bazli SIEM Pack release (v*) ----
+# git tag v1.0.0 && git push origin v1.0.0
+# GitLab Release sayfasinda kalici versiyonlu paket olusur.
+release:siem-pack:
+  stage: release
+  image: python:3.11-slim
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+/'
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git curl
+    - pip install -q --cache-dir "$PIP_CACHE_DIR" requests
+  script:
+    - |
+      if [ ! -f state/sgb.db ]; then
+        echo "HATA: state/sgb.db yok. Once full sync calistir ve commit'le."
+        exit 1
+      fi
+    - python scripts/export.py
+    - python scripts/build_pack.py
+    - python scripts/build_splunk_ta.py
+    - mkdir -p release-assets
+    - tar -czf release-assets/sgb-feeds.tar.gz feeds/
+    - tar -czf release-assets/sgb-qradar-pack.tar.gz -C siem/qradar/out .
+    - cp siem/splunk/out/TA-sgb-threatintel.tar.gz release-assets/
+    - cp feeds/stix/sgb-*.stix2.json release-assets/ 2>/dev/null || true
+    - cp feeds/index.json release-assets/feeds-index.json
+    - cp siem/qradar/out/manifest.json release-assets/qradar-manifest.json
+    - cp siem/splunk/out/manifest.json release-assets/splunk-manifest.json
+    - cd release-assets && sha256sum * > SHA256SUMS && cd ..
+    # GitLab Package Registry'a yukle (release-cli'in indirilebilir referans almasi icin)
+    - |
+      for f in release-assets/*; do
+        name=$(basename "$f")
+        curl --fail --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --upload-file "$f" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sgb-siem-pack/${CI_COMMIT_TAG}/${name}"
+      done
+  artifacts:
+    paths: [release-assets/]
+    expire_in: never
+  cache:
+    key: pip
+    paths: [.cache/pip]
+  release:
+    name: "SGB SIEM Pack $CI_COMMIT_TAG"
+    description: |
+      Otomatik uretilmis SIEM Pack.
+      Indirilebilir paketler: GitLab Package Registry > sgb-siem-pack > $CI_COMMIT_TAG
+      Icerik: feeds (master CSV/JSONL + STIX 2.1), QRadar pack, Splunk TA.
+    tag_name: "$CI_COMMIT_TAG"
 
 # ---- Opsiyonel: GitLab Pages ----
 # Pages'i kullanmak istersen yorumdan cikar. URL formati:

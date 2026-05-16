@@ -1,0 +1,146 @@
+# SGB SIEM Pack release - tag bazli versiyonlu paket yayini.
+#
+# Tetikleme:
+#   git tag v1.0.0 && git push origin v1.0.0
+#   veya workflow_dispatch ile elle
+#
+# Cikti: GitHub Release sayfasinda dort artifact:
+#   - sgb-feeds.tar.gz           (master CSV/JSONL + STIX 2.1 + slice'lar)
+#   - sgb-qradar-pack.tar.gz     (reference set + map CSV'leri + manifest)
+#   - TA-sgb-threatintel.tar.gz  (Splunk TA)
+#   - SHA256SUMS                  (her dosyanin sha256'si)
+#
+# Integration dokumanlarinda referans verilen kalici URL formati:
+#   https://github.com/<owner>/<repo>/releases/download/v<X.Y.Z>/<file>
+#   https://github.com/<owner>/<repo>/releases/latest/download/<file>
+
+name: Release SIEM Pack
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-siem-pack
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install requests
+
+      - name: Verify DB present (full sync gerekli)
+        run: |
+          if [ ! -f state/sgb.db ]; then
+            echo "::error::state/sgb.db yok. Once 'Sync (full)' workflow'unu calistirip"
+            echo "DB'yi commit ettirin, sonra tag atin."
+            exit 1
+          fi
+          python -c "import sqlite3; c=sqlite3.connect('state/sgb.db'); \
+            n=c.execute('SELECT COUNT(*) FROM indicators WHERE removed_at_utc IS NULL').fetchone()[0]; \
+            print(f'DB active records: {n}'); assert n > 0"
+
+      - name: Build feeds (master + STIX + slices)
+        run: python scripts/export.py
+
+      - name: Build QRadar pack
+        run: python scripts/build_pack.py
+
+      - name: Build Splunk TA
+        run: python scripts/build_splunk_ta.py
+
+      - name: Package artifacts
+        run: |
+          mkdir -p release-assets
+          # feeds/ tar
+          tar -czf release-assets/sgb-feeds.tar.gz feeds/
+          # qradar pack tar (out/ icerikleri)
+          tar -czf release-assets/sgb-qradar-pack.tar.gz -C siem/qradar/out .
+          # splunk TA (zaten tarball)
+          cp siem/splunk/out/TA-sgb-threatintel.tar.gz release-assets/
+          # Standalone STIX bundle dosyalari (dogrudan ingest icin)
+          cp feeds/stix/sgb-domain.stix2.json   release-assets/ 2>/dev/null || true
+          cp feeds/stix/sgb-url.stix2.json      release-assets/ 2>/dev/null || true
+          cp feeds/stix/sgb-ip.stix2.json       release-assets/ 2>/dev/null || true
+          cp feeds/stix/sgb-ip6.stix2.json      release-assets/ 2>/dev/null || true
+          cp feeds/stix/sgb-ip6net.stix2.json   release-assets/ 2>/dev/null || true
+          # Manifest dosyalari
+          cp feeds/index.json release-assets/feeds-index.json
+          cp siem/qradar/out/manifest.json release-assets/qradar-manifest.json
+          cp siem/splunk/out/manifest.json release-assets/splunk-manifest.json
+          # SHA256
+          ( cd release-assets && sha256sum * > SHA256SUMS )
+          ls -lh release-assets/
+
+      - name: Determine release name
+        id: relmeta
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "name=SGB SIEM Pack ${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            ts=$(date -u +%Y%m%d-%H%M)
+            echo "tag=manual-${ts}" >> "$GITHUB_OUTPUT"
+            echo "name=SGB SIEM Pack (manual ${ts})" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate release notes
+        run: |
+          {
+            echo "## SGB SIEM Pack"
+            echo ""
+            echo "Otomatik uretilmis SIEM artifact paketi."
+            echo ""
+            echo "### Icerik"
+            echo ""
+            echo "| Dosya | Acaiklama |"
+            echo "|-------|-----------|"
+            echo "| \`sgb-feeds.tar.gz\` | Master CSV/JSONL + STIX 2.1 bundle'lari + slice text dosyalari |"
+            echo "| \`sgb-qradar-pack.tar.gz\` | QRadar reference set + map CSV'leri |"
+            echo "| \`TA-sgb-threatintel.tar.gz\` | Splunk TA (lookup + saved searches + dashboard) |"
+            echo "| \`sgb-{type}.stix2.json\` | Tek tek STIX 2.1 bundle'lari (MISP/Sentinel direct ingest) |"
+            echo "| \`*-manifest.json\` | Her artifact'in build manifest'i (hash, count) |"
+            echo "| \`SHA256SUMS\` | Tum dosyalarin SHA256 ozeti |"
+            echo ""
+            echo "### Kalici 'latest' URL formati"
+            echo ""
+            echo "\`\`\`"
+            echo "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/<file>"
+            echo "\`\`\`"
+            echo ""
+            echo "Ornek:"
+            echo "- \`https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/sgb-domain.stix2.json\`"
+            echo "- \`https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/TA-sgb-threatintel.tar.gz\`"
+            echo ""
+            echo "### Dogrulama"
+            echo ""
+            echo "\`\`\`bash"
+            echo "curl -sLO https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/SHA256SUMS"
+            echo "curl -sLO https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/sgb-feeds.tar.gz"
+            echo "sha256sum -c SHA256SUMS --ignore-missing"
+            echo "\`\`\`"
+          } > release-notes.md
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.relmeta.outputs.tag }}
+          name: ${{ steps.relmeta.outputs.name }}
+          body_path: release-notes.md
+          files: release-assets/*
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true

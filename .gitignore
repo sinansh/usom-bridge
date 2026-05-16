@@ -9,3 +9,8 @@ venv/
 # SQLite WAL/SHM gecici dosyalar (sadece sgb.db commit edilir)
 *.db-wal
 *.db-shm
+# SIEM pack build cikti dizinleri: artifact'lar CI workflow uretir,
+# GitHub Release / Actions artifact'i uzerinden dagitilir, commit edilmez.
+feeds/
+siem/qradar/out/
+siem/splunk/out/
