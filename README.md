@@ -32,6 +32,16 @@ Aşağıdaki URL'leri firewall'una doğrudan ver:
 | IPv6 subnet | — | `https://bilsectr.github.io/sgb-api-bridge/ip6net-list.txt` |
 | Stats | — | `https://bilsectr.github.io/sgb-api-bridge/stats.json` |
 
+## TAXII 2.1 servisi (SIEM için)
+
+`connectiontype` bazında STIX 2.1 indicator beslemesi — anonim, kimlik doğrulama yok:
+
+```
+https://sgb-taxii.bilsec.tr/taxii2/
+```
+
+Koleksiyonlar: `sgb-phishing`, `sgb-botnet-cc`, `sgb-apt-cc`, `sgb-exploit-kit`, `sgb-malware-download`, `sgb-mining`, `sgb-mobile-cc`, `sgb-other`. SIEM use case library'leriyle (`UC-PH-*`, `UC-BC-*`, …) birebir eşleşir. Detay: [docs/setup-taxii.md](docs/setup-taxii.md).
+
 ## Hızlı başlangıç (Docker)
 
 ```bash

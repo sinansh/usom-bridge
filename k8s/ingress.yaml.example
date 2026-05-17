@@ -13,6 +13,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
+    # Klasik feed host (TXT listeleri + SIEM Pack)
     - host: sgb-feed.kurum.local
       http:
         paths:
@@ -23,6 +24,27 @@ spec:
                 name: sgb-api-bridge
                 port:
                   number: 80
+    # TAXII 2.1 endpoint — istege bagli ayri host. Ayni Service'i kullanir;
+    # nginx /taxii2/ ve /api/ rotalari docs/taxii/ altini serve eder. Boyle
+    # ayri host SIEM client'larinda TAXII server URL'sini sade tutmak icin
+    # pratik (root path = api root). Tek host kullanmak istersen bu blogu sil.
+    - host: sgb-taxii.kurum.local
+      http:
+        paths:
+          - path: /taxii2
+            pathType: Prefix
+            backend:
+              service:
+                name: sgb-api-bridge
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: sgb-api-bridge
+                port:
+                  number: 80
   # tls:
-  #   - hosts: ["sgb-feed.kurum.local"]
+  #   - hosts: ["sgb-feed.kurum.local", "sgb-taxii.kurum.local"]
   #     secretName: sgb-api-bridge-tls

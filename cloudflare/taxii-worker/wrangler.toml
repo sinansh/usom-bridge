@@ -1,0 +1,19 @@
+name = "sgb-taxii"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+workers_dev = false
+
+# Production routes (custom domain)
+[[routes]]
+pattern = "sgb-taxii.bilsec.tr/*"
+zone_name = "bilsec.tr"
+
+# Upstream: GitHub Pages statik TAXII tree
+# scripts/build_taxii.py docs/taxii/ uretir; GH Pages bunu servis eder.
+# Worker bu agacin uzerine TAXII semantik katmani (added_after/limit/next,
+# content-type, host rewrite, edge cache) ekler.
+[vars]
+UPSTREAM_BASE   = "https://bilsectr.github.io/sgb-api-bridge/taxii"
+PUBLIC_BASE     = "https://sgb-taxii.bilsec.tr"
+EDGE_CACHE_TTL  = "300"      # saniye — saatlik build ile uyumlu
+PAGES_CACHE_TTL = "60"       # pages.json daha sik tazelenir (cursor lookup)

@@ -1,7 +1,8 @@
-# Full sync YALNIZCA elle tetiklenir — ilk bootstrap veya sifirdan tam re-sync icin.
-# Normal calismada gerekli degil: repo gecmis veriyi zaten icerir, delta workflow devam eder.
-# (USOM/SGB full sync'i 15+ saat surdugu icin haftalik cron kaldirildi.)
-name: Sync (full, manual bootstrap only)
+# NOT: Per-page=1000 sonrasi full sync ~10 dk surdugu icin saatlik workflow
+# (sync-delta.yml) artik zaten full sync calistiriyor. Bu workflow yalniz
+# istisnai durumlarda kullanilir: state/seen_ids.json bozulmasi, manuel
+# bootstrap, veya sifirdan re-sync isteyen forklar icin.
+name: Sync (full, manual force-rebuild)
 
 on:
   workflow_dispatch:

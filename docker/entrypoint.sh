@@ -21,6 +21,11 @@ shift 2>/dev/null || true
 
 DATA_ROOT="${SGB_BRIDGE_ROOT:-/data}"
 PACK_ENABLED="${SGB_BRIDGE_PACK_ENABLED:-1}"
+TAXII_ENABLED="${SGB_BRIDGE_TAXII_ENABLED:-1}"
+# Loop modu sync alt-modu: per-page=1000 ile full sync ~10 dk; silinen kayitlari
+# yakaladigi icin TAXII/STIX cikti'sini stabil tutmak isteyenler icin default.
+# Eski davranis icin: SGB_BRIDGE_SYNC_MODE=delta
+SYNC_MODE="${SGB_BRIDGE_SYNC_MODE:-full}"
 
 # Veri dizinleri yoksa olustur
 mkdir -p "$DATA_ROOT/docs" "$DATA_ROOT/state" "$DATA_ROOT/feeds" \
@@ -62,20 +67,34 @@ pack_rebuild() {
   echo "[entrypoint] pack rebuild tamam"
 }
 
+# TAXII tree (docs/taxii/) rebuild — nginx /taxii2/ + /api/ rotalari bunu serve eder.
+taxii_rebuild() {
+  if [ "$TAXII_ENABLED" != "1" ]; then
+    return 0
+  fi
+  if [ ! -f "$DATA_ROOT/state/sgb.db" ]; then
+    echo "[entrypoint] taxii skip: $DATA_ROOT/state/sgb.db yok"
+    return 0
+  fi
+  python /app/scripts/build_taxii.py --compact || echo "[entrypoint] build_taxii hata - devam"
+}
+
 case "$MODE" in
   all-in-one)
     echo "[entrypoint] all-in-one: nginx + python loop (delta+pack)"
     nginx
     # Ilk acilista catalog'lari da bir kez denemek isteyenler icin (online'sa):
     # python /app/scripts/sync.py --mode catalog-sync || true
-    # Loop oncesi bir kez pack rebuild (seed verisinde DB varsa feeds/ dolu olsun)
+    # Loop oncesi bir kez pack + taxii rebuild (seed verisinde DB varsa)
     pack_rebuild
+    taxii_rebuild
     # Loop sync: her delta sonrasi pack rebuild yapilacak (PACK_ENABLED=1 ise).
     # sync.py'nin loop modu kendi icinde pack yapmiyor; bunu kabuk ile saglıyoruz:
-    if [ "$PACK_ENABLED" = "1" ]; then
+    if [ "$PACK_ENABLED" = "1" ] || [ "$TAXII_ENABLED" = "1" ]; then
       while :; do
-        python /app/scripts/sync.py --mode delta || echo "[entrypoint] sync hata"
+        python /app/scripts/sync.py --mode "$SYNC_MODE" || echo "[entrypoint] sync hata"
         pack_rebuild
+        taxii_rebuild
         sleep "${SGB_BRIDGE_DELTA_INTERVAL_SEC:-3600}"
       done
     else
@@ -85,10 +104,11 @@ case "$MODE" in
   loop)
     echo "[entrypoint] loop: sadece sync + (opt) pack rebuild"
     pack_rebuild
-    if [ "$PACK_ENABLED" = "1" ]; then
+    if [ "$PACK_ENABLED" = "1" ] || [ "$TAXII_ENABLED" = "1" ]; then
       while :; do
-        python /app/scripts/sync.py --mode delta || echo "[entrypoint] sync hata"
+        python /app/scripts/sync.py --mode "$SYNC_MODE" || echo "[entrypoint] sync hata"
         pack_rebuild
+        taxii_rebuild
         sleep "${SGB_BRIDGE_DELTA_INTERVAL_SEC:-3600}"
       done
     else

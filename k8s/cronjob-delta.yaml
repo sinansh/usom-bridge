@@ -1,3 +1,8 @@
+# Saatlik FULL sync + SIEM pack + TAXII tree rebuild.
+# Eski isim sgb-sync-delta korunuyor (geri uyumluluk; ConfigMap/RBAC referanslarini
+# bozmamak icin). Davranis: per-page=1000 ile ~10 dk full sync, ardindan
+# build_taxii (docs/taxii/), pack (feeds/, siem/). Smart upsert sayesinde
+# degisiklik yoksa cikti'lar byte-identical kalir.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -19,7 +24,15 @@ spec:
             - name: sync
               image: ghcr.io/bilsectr/sgb-api-bridge:latest
               imagePullPolicy: IfNotPresent
-              args: ["sync-once", "delta"]
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -e
+                  python /app/scripts/sync.py --mode full
+                  python /app/scripts/export.py || echo "export hata - devam"
+                  python /app/scripts/build_pack.py || echo "pack hata - devam"
+                  python /app/scripts/build_splunk_ta.py || echo "splunk-ta hata - devam"
+                  python /app/scripts/build_taxii.py --compact || echo "taxii hata - devam"
               env:
                 - name: SGB_BRIDGE_ROOT
                   value: /data

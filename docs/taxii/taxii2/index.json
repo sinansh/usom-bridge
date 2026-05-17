@@ -1,0 +1,1 @@
+{"title":"SGB Threat Intelligence (TAXII 2.1)","description":"Siber Guvenlik Baskanligi (SGB, eski USOM) acik tehdit beslemesinin TAXII 2.1 sunumu. Anonim erisim, public veri.","contact":"https://github.com/bilsectr/sgb-api-bridge","default":"__TAXII_BASE__/api/","api_roots":["__TAXII_BASE__/api/"]}

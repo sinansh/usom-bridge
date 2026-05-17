@@ -1,4 +1,11 @@
-name: Sync (delta, hourly)
+# Saatlik FULL sync. Eski "delta" mantigi (yalniz max_id ustu kayitlar) yerini
+# tam pull'a birakti cunku:
+#   - per-page=1000 + 1 rps = ~10 dk: 60 dk pencerede rahat
+#   - Silinen kayitlari otomatik reconcile eder (delta yapamiyordu)
+#   - sgb_db smart upsert sayesinde icerik degismemis kayitlar last_changed_utc
+#     bumplamaz -> STIX/TAXII cikti'si byte-identical kalir -> git diff sifir.
+# Dosya adi geri uyumluluk icin sync-delta.yml kalsin (badge linkleri).
+name: Sync (hourly full)
 
 on:
   schedule:
@@ -23,13 +30,17 @@ jobs:
           python-version: '3.11'
       - run: pip install requests
 
-      - name: Delta sync (txt feed + SQLite dual-write)
-        run: python scripts/sync.py --mode delta
+      - name: Full sync (txt feed + SQLite dual-write)
+        run: python scripts/sync.py --mode full
 
       - name: Health check
         run: python scripts/sync.py --mode healthcheck
 
-      - name: Commit txt feed + state + DB
+      - name: Build TAXII 2.1 tree (docs/taxii/)
+        if: hashFiles('state/sgb.db') != ''
+        run: python scripts/build_taxii.py --compact
+
+      - name: Commit txt feed + state + DB + TAXII
         run: |
           git config user.name "sgb-api-bridge-bot"
           git config user.email "noreply@github.com"
@@ -37,7 +48,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "Degisiklik yok"
           else
-            git commit -m "Delta sync $(date -u +%Y-%m-%dT%H:%MZ)"
+            git commit -m "Sync $(date -u +%Y-%m-%dT%H:%MZ)"
             git push
           fi
 

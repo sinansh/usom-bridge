@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS indicators (
@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS indicators (
     api_date          TEXT,
     first_seen_utc    TEXT NOT NULL,
     last_seen_utc     TEXT NOT NULL,
+    last_changed_utc  TEXT,
     removed_at_utc    TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ind_type    ON indicators(type);
@@ -89,12 +90,29 @@ def connect(root: Path) -> sqlite3.Connection:
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA_SQL)
+    _migrate(conn)
     conn.execute(
         "INSERT OR REPLACE INTO meta(key,value) VALUES('schema_version', ?)",
         (str(SCHEMA_VERSION),),
     )
     conn.commit()
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Sema migration'lari. CREATE TABLE IF NOT EXISTS yeni kurulumlari
+    halleder; bu fonksiyon eski DB'leri ileri tasir.
+    """
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(indicators)")}
+    if "last_changed_utc" not in cols:
+        # schema_version 1 -> 2: STIX 'modified' icin stabil timestamp.
+        # Mevcut kayitlar icin first_seen_utc ile baslatiriz; ilk smart upsert'te
+        # gercek degisiklik varsa bumplar.
+        conn.execute("ALTER TABLE indicators ADD COLUMN last_changed_utc TEXT")
+        conn.execute(
+            "UPDATE indicators SET last_changed_utc = first_seen_utc "
+            "WHERE last_changed_utc IS NULL"
+        )
 
 
 def upsert_indicators(
@@ -143,17 +161,33 @@ def upsert_indicators(
             rec.get("date"),
             now,  # first_seen (only used on INSERT)
             now,  # last_seen
+            now,  # last_changed (INSERT'te now; UPDATE'te asagidaki CASE karar verir)
         )
-        # SQLite UPSERT: yeni kayitta first_seen=now; mevcut kayitta first_seen
-        # KORUNUR, last_seen yenilenir, alanlar tazelenir, removed_at temizlenir.
+        # SQLite UPSERT: yeni kayitta first_seen=last_changed=now; mevcut kayitta
+        # first_seen KORUNUR, last_seen her zaman yenilenir, last_changed YALNIZ
+        # anlamli alan degistiyse bumplar (STIX 'modified' stabilitesi icin).
+        # Bu sayede saatlik full sync'te degismeyen kayitlarin STIX cikti'si
+        # byte-identical kalir -> git diff sifir.
         cur.execute(
             """
             INSERT INTO indicators(
                 id, type, value_raw, value_clean, valid,
                 category, connectiontype, source, criticality_level,
-                api_date, first_seen_utc, last_seen_utc
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                api_date, first_seen_utc, last_seen_utc, last_changed_utc
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET
+                last_changed_utc = CASE
+                    WHEN COALESCE(indicators.value_clean,'')       != COALESCE(excluded.value_clean,'')
+                      OR COALESCE(indicators.category,'')          != COALESCE(excluded.category,'')
+                      OR COALESCE(indicators.connectiontype,'')    != COALESCE(excluded.connectiontype,'')
+                      OR COALESCE(indicators.source,'')            != COALESCE(excluded.source,'')
+                      OR COALESCE(indicators.criticality_level,-1) != COALESCE(excluded.criticality_level,-1)
+                      OR COALESCE(indicators.api_date,'')          != COALESCE(excluded.api_date,'')
+                      OR COALESCE(indicators.valid,0)              != COALESCE(excluded.valid,0)
+                      OR indicators.removed_at_utc IS NOT NULL
+                    THEN excluded.last_seen_utc
+                    ELSE indicators.last_changed_utc
+                END,
                 type              = excluded.type,
                 value_raw         = excluded.value_raw,
                 value_clean       = excluded.value_clean,

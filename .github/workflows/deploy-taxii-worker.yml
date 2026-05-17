@@ -1,0 +1,40 @@
+# Cloudflare Worker (sgb-taxii.bilsec.tr) deploy.
+# Tetiklenir:
+#  - cloudflare/taxii-worker/** degisiklik push'unda (main)
+#  - elle (workflow_dispatch)
+# Worker UPSTREAM_BASE = GitHub Pages TAXII tree; veri push'lari Worker deploy'u
+# gerektirmez (saatlik sync ile docs/taxii/ tazelenir, Worker hep upstream'i okur).
+name: Deploy TAXII Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare/taxii-worker/**'
+      - '.github/workflows/deploy-taxii-worker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cloudflare/taxii-worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm run typecheck
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: cloudflare/taxii-worker
+          command: deploy
