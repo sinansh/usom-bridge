@@ -14,3 +14,9 @@ venv/
 feeds/
 siem/qradar/out/
 siem/splunk/out/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
