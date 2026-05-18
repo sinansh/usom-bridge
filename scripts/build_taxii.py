@@ -51,7 +51,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-import export as _export  # STIX converter + identity + namespace yeniden kullanim
+import stix_convert as _export  # STIX converter + identity + namespace
 import sgb_db  # noqa: F401
 
 __version__ = "1.0.0"
