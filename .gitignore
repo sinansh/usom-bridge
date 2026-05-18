@@ -6,9 +6,12 @@ venv/
 .env
 .DS_Store
 *.log
-# SQLite WAL/SHM gecici dosyalar (sadece sgb.db commit edilir)
+# SQLite WAL/SHM gecici dosyalar
 *.db-wal
 *.db-shm
+# sgb.db artik git'te tutulmuyor (>100MB GitHub limiti) - rolling release
+# 'feeds-latest' asset olarak dagitilir, workflow basinda indirilir.
+state/sgb.db
 # SIEM pack build cikti dizinleri: artifact'lar CI workflow uretir,
 # GitHub Release / Actions artifact'i uzerinden dagitilir, commit edilmez.
 feeds/

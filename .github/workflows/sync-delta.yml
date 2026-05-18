@@ -30,6 +30,20 @@ jobs:
           python-version: '3.11'
       - run: pip install requests
 
+      # sgb.db artik git'te degil (>100MB GitHub limiti). Onceki state'i
+      # rolling release 'feeds-latest' asset'inden indir. Yoksa (ilk run /
+      # release silinmis) sync sifirdan kurar.
+      - name: Restore sgb.db from rolling release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p state
+          if gh release download feeds-latest -p sgb.db -D state/ 2>/dev/null; then
+            echo "sgb.db restored: $(ls -lh state/sgb.db)"
+          else
+            echo "feeds-latest icinde sgb.db yok - sifirdan kurulacak"
+          fi
+
       - name: Full sync (txt feed + SQLite dual-write)
         run: python scripts/sync.py --mode full
 
@@ -40,11 +54,13 @@ jobs:
         if: hashFiles('state/sgb.db') != ''
         run: python scripts/build_taxii.py --compact
 
-      - name: Commit txt feed + state + DB + TAXII
+      - name: Commit txt feed + state (seen_ids.json) + TAXII
+        # NOT: state/sgb.db .gitignore'da - rolling release asset'i olarak
+        # dagitiliyor (asagidaki 'Prepare rolling release assets' adimi).
         run: |
           git config user.name "sgb-api-bridge-bot"
           git config user.email "noreply@github.com"
-          git add docs/ state/
+          git add docs/ state/seen_ids.json
           if git diff --staged --quiet; then
             echo "Degisiklik yok"
           else
@@ -127,6 +143,11 @@ jobs:
           cp feeds/index.json release-assets/feeds-index.json
           cp siem/qradar/out/manifest.json release-assets/qradar-manifest.json
           cp siem/splunk/out/manifest.json release-assets/splunk-manifest.json
+          # sgb.db: bir sonraki workflow run'inin restore edebilmesi icin
+          # asset olarak yukle (Restore sgb.db from rolling release adimi indirir).
+          if [ -f state/sgb.db ]; then
+            cp state/sgb.db release-assets/sgb.db
+          fi
           ( cd release-assets && sha256sum * > SHA256SUMS )
           echo "HEAD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "BUILT_AT=$(date -u +%Y-%m-%dT%H:%MZ)" >> "$GITHUB_ENV"
